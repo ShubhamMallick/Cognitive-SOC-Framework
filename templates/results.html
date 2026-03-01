@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Uncertainty-Aware SOC Framework</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        p { margin: 10px 0; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 5px 0; }
+        a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007BFF; color: white; text-decoration: none; border-radius: 5px; }
+        a:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Analysis Results</h1>
+
+    <h2>Detection Results</h2>
+    <p><strong>Anomaly Probability:</strong> {{ "%.4f"|format(result.detection.anomaly_probability) }}</p>
+    <p><strong>Deviation Score:</strong> {{ "%.4f"|format(result.detection.deviation_score) }}</p>
+    <p><strong>Uncertainty Score:</strong> {{ "%.4f"|format(result.detection.uncertainty_score) }}</p>
+    <p><strong>Decision:</strong> {{ result.detection.decision }}</p>
+
+    <h3>Top Features</h3>
+    <ul>
+        {% for key, value in result.detection.top_features.items() %}
+        <li><strong>{{ key }}:</strong> {{ "%.4f"|format(value) }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Context Framing Results</h2>
+    <p><strong>Base Risk:</strong> {{ "%.4f"|format(result.context.base_risk) }}</p>
+    <p><strong>Asset Modifier:</strong> {{ result.context.asset_modifier }}</p>
+    <p><strong>Network Modifier:</strong> {{ result.context.network_modifier }}</p>
+    <p><strong>Security Modifier:</strong> {{ result.context.security_modifier }}</p>
+    <p><strong>Final Contextual Risk:</strong> {{ "%.4f"|format(result.context.final_contextual_risk) }}</p>
+    <p><strong>Risk Band:</strong> {{ result.context.risk_band }}</p>
+    <p><strong>Confidence Band:</strong> {{ result.context.confidence_band }}</p>
+
+    <a href="/">Back to Form</a>
+</body>
+</html>

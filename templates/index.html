@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uncertainty-Aware SOC Framework</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: block; margin: 10px 0 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #007BFF; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Uncertainty-Aware SOC Framework</h1>
+    <form id="analyzeForm">
+        <h2>Device Context</h2>
+        <label>Device ID: <input type="text" name="device_id" value="D493" required></label>
+        <label>Device Type: <select name="device_type" required><option value="mri">mri</option><option value="ct">ct</option><option value="ultrasound">ultrasound</option></select></label>
+        <label>Department: <select name="department" required><option value="ICU">ICU</option><option value="ER">ER</option><option value="Radiology">Radiology</option></select></label>
+        <label>Firmware Version: <select name="firmware_version" required><option value="v2.0">v2.0</option><option value="v1.0">v1.0</option><option value="v3.0">v3.0</option></select></label>
+        <label>Criticality Level (1-5): <input type="range" name="criticality_level" min="1" max="5" value="3" oninput="this.nextElementSibling.value = this.value"><output>3</output></label>
+
+        <h2>System Metrics</h2>
+        <label>CPU Usage % (0-100): <input type="range" name="cpu_usage_percent" min="0" max="100" value="40" oninput="this.nextElementSibling.value = this.value"><output>40</output></label>
+        <label>Memory Usage % (0-100): <input type="range" name="memory_usage_percent" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value"><output>50</output></label>
+        <label>Disk Write MB/min (0-1500): <input type="range" name="disk_write_mb_per_min" min="0" max="1500" value="50" oninput="this.nextElementSibling.value = this.value"><output>50</output></label>
+        <label>Disk Read MB/min (0-300): <input type="range" name="disk_read_mb_per_min" min="0" max="300" value="80" oninput="this.nextElementSibling.value = this.value"><output>80</output></label>
+        <label>Process Spawn Count (0-100): <input type="range" name="process_spawn_count" min="0" max="100" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
+
+        <h2>File System Metrics</h2>
+        <label>File Rename Count (0-2000): <input type="range" name="file_rename_count" min="0" max="2000" value="5" oninput="this.nextElementSibling.value = this.value"><output>5</output></label>
+        <label>New File Creation Count (0-1000): <input type="range" name="new_file_creation_count" min="0" max="1000" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
+        <label>File Entropy Avg (0-8): <input type="range" name="file_entropy_avg" min="0" max="8" step="0.1" value="5.5" oninput="this.nextElementSibling.value = this.value"><output>5.5</output></label>
+        <label>Encrypted Extension Ratio (0-1): <input type="range" name="encrypted_extension_ratio" min="0" max="1" step="0.01" value="0.0" oninput="this.nextElementSibling.value = this.value"><output>0.0</output></label>
+
+        <h2>Network Metrics</h2>
+        <label>Outbound Traffic MB (0-1000): <input type="range" name="outbound_traffic_mb" min="0" max="1000" value="20" oninput="this.nextElementSibling.value = this.value"><output>20</output></label>
+        <label>Inbound Traffic MB (0-200): <input type="range" name="inbound_traffic_mb" min="0" max="200" value="40" oninput="this.nextElementSibling.value = this.value"><output>40</output></label>
+        <label>Unique External IPs (0-50): <input type="range" name="unique_external_ips" min="0" max="50" value="1" oninput="this.nextElementSibling.value = this.value"><output>1</output></label>
+        <label>DNS Request Count (0-200): <input type="range" name="dns_request_count" min="0" max="200" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
+        <label>Unusual Port Flag (0-1): <input type="range" name="unusual_port_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+
+        <h2>Security Signals</h2>
+        <label>Privilege Escalation Flag (0-1): <input type="range" name="privilege_escalation_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+        <label>Configuration Change Flag (0-1): <input type="range" name="configuration_change_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+        <label>Antivirus Alert Flag (0-1): <input type="range" name="antivirus_alert_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+        <label>Failed Auth Attempts (0-20): <input type="range" name="failed_auth_attempts" min="0" max="20" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+
+        <button type="submit">Analyze Device</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            // Convert to numbers where needed
+            for (let key in data) {
+                if (key !== 'device_id' && key !== 'device_type' && key !== 'department' && key !== 'firmware_version') {
+                    data[key] = parseFloat(data[key]);
+                }
+            }
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                // Redirect to results page with data
+                window.location.href = `/results?data=${encodeURIComponent(JSON.stringify(result))}`;
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
