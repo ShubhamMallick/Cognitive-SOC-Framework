@@ -54,3 +54,5 @@ langgraph==0.2.16
 gTTS==2.5.1
 
 pymongo==4.16.0
+
+streamlit==1.32.2
