@@ -7,6 +7,7 @@ import joblib
 from sklearn.preprocessing import LabelEncoder
 import os
 import json
+import asyncio
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
@@ -14,6 +15,12 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 # Import detection + context modules
 from Anomaly_Detection import run_detection
 from Anomaly_Detection.Context_Framing import ContextFramingEngine
+
+# Import Agents
+from Agents.policy_agent import policy_agent
+from Agents.threat_agent import threat_agent
+from Agents.impact_agent import impact_agent
+from Agents.privacy_agent import privacy_agent
 
 
 # =====================================================
@@ -23,6 +30,9 @@ from Anomaly_Detection.Context_Framing import ContextFramingEngine
 app = FastAPI(title="Uncertainty-Aware SOC Framework")
 
 context_engine = ContextFramingEngine()
+
+# Store agent outputs (temporary in-memory storage)
+agent_results = {}
 
 
 # =====================================================
@@ -95,7 +105,7 @@ async def home(request: Request):
 
 
 # =====================================================
-# RESULTS ROUTE
+# RESULTS ROUTE (UNCHANGED)
 # =====================================================
 
 @app.get("/results")
@@ -105,11 +115,46 @@ async def show_results(request: Request, data: str):
 
 
 # =====================================================
-# ANALYZE ROUTE
+# PARALLEL AGENT EXECUTION FUNCTION
+# =====================================================
+
+async def run_agents_parallel(raw_features, detection_result, context_result):
+
+    policy_task = asyncio.to_thread(
+        policy_agent, raw_features, detection_result, context_result
+    )
+
+    threat_task = asyncio.to_thread(
+        threat_agent, raw_features, detection_result, context_result
+    )
+
+    impact_task = asyncio.to_thread(
+        impact_agent, raw_features, detection_result, context_result
+    )
+
+    privacy_task = asyncio.to_thread(
+        privacy_agent, raw_features, detection_result, context_result
+    )
+
+    policy_result, threat_result, impact_result, privacy_result = await asyncio.gather(
+        policy_task,
+        threat_task,
+        impact_task,
+        privacy_task
+    )
+
+    agent_results["policy"] = policy_result
+    agent_results["threat"] = threat_result
+    agent_results["impact"] = impact_result
+    agent_results["privacy"] = privacy_result
+
+
+# =====================================================
+# ANALYZE ROUTE (Original Logic Preserved)
 # =====================================================
 
 @app.post("/analyze")
-def analyze_device(data: DeviceData):
+async def analyze_device(data: DeviceData):
 
     try:
         # Convert input to dictionary
@@ -140,7 +185,13 @@ def analyze_device(data: DeviceData):
         )
 
         # ==============================
-        # Combine Results
+        # Run Agents in Parallel
+        # ==============================
+
+        await run_agents_parallel(input_dict, detection_result, context_result)
+
+        # ==============================
+        # Return Original Response (UNCHANGED)
         # ==============================
 
         return JSONResponse({
@@ -153,3 +204,51 @@ def analyze_device(data: DeviceData):
             status_code=400,
             content={"error": str(e)}
         )
+
+
+# =====================================================
+# AGENT HTML ENDPOINTS (Send Agent Data)
+# =====================================================
+
+@app.get("/policy")
+async def show_policy(request: Request):
+    return templates.TemplateResponse(
+        "policy.html",
+        {
+            "request": request,
+            "result": agent_results.get("policy")
+        }
+    )
+
+
+@app.get("/threat")
+async def show_threat(request: Request):
+    return templates.TemplateResponse(
+        "threat.html",
+        {
+            "request": request,
+            "result": agent_results.get("threat")
+        }
+    )
+
+
+@app.get("/impact")
+async def show_impact(request: Request):
+    return templates.TemplateResponse(
+        "impact.html",
+        {
+            "request": request,
+            "result": agent_results.get("impact")
+        }
+    )
+
+
+@app.get("/privacy")
+async def show_privacy(request: Request):
+    return templates.TemplateResponse(
+        "privacy.html",
+        {
+            "request": request,
+            "result": agent_results.get("privacy")
+        }
+    )

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Policy Agent - Compliance Risk</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .critical { color: red; font-weight: bold; }
+        .elevated { color: orange; font-weight: bold; }
+        .normal { color: green; font-weight: bold; }
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>🛡 Security Policy & Compliance Agent</h1>
+
+{% if result %}
+
+<div class="box">
+    <p><strong>Policy Risk Score:</strong> {{ "%.4f"|format(result.policy_risk_score) }}</p>
+
+    <p><strong>Policy Level:</strong>
+        {% if result.policy_level == "CRITICAL" %}
+            <span class="critical">CRITICAL</span>
+        {% elif result.policy_level == "ELEVATED" %}
+            <span class="elevated">ELEVATED</span>
+        {% else %}
+            <span class="normal">NORMAL</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Mandatory Action Required:</strong>
+        {% if result.mandatory_action %}
+            <span class="critical">YES</span>
+        {% else %}
+            No
+        {% endif %}
+    </p>
+</div>
+
+{% else %}
+<p>No policy results available.</p>
+{% endif %}
+
+<a href="/results">⬅ Back to Dashboard</a>
+
+</body>
+</html>

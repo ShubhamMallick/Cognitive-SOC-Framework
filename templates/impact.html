@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Impact & Propagation Agent</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .critical { color: red; font-weight: bold; }
+        .high { color: orange; font-weight: bold; }
+        .moderate { color: green; font-weight: bold; }
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>💥 Impact & Propagation Agent</h1>
+
+{% if result %}
+
+<div class="box">
+    <p><strong>Impact Score:</strong> {{ "%.4f"|format(result.impact_score) }}</p>
+    <p><strong>Propagation Factor:</strong> {{ "%.4f"|format(result.propagation_factor) }}</p>
+
+    <p><strong>Severity Level:</strong>
+        {% if result.severity == "CRITICAL" %}
+            <span class="critical">CRITICAL</span>
+        {% elif result.severity == "HIGH" %}
+            <span class="high">HIGH</span>
+        {% else %}
+            <span class="moderate">MODERATE</span>
+        {% endif %}
+    </p>
+</div>
+
+{% else %}
+<p>No impact results available.</p>
+{% endif %}
+
+<a href="/results">⬅ Back to Dashboard</a>
+
+</body>
+</html>
