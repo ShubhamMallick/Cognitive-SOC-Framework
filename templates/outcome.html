@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Outcome & Feedback Evaluation</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .positive { color: green; font-weight: bold; }
+        .negative { color: red; font-weight: bold; }
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>🏷 Outcome & Feedback Evaluation</h1>
+
+{% if result %}
+
+<div class="box">
+
+    <p><strong>Actual Threat Detected:</strong>
+        {% if result.actual_threat_detected %}
+            <span class="negative">YES</span>
+        {% else %}
+            <span class="positive">NO</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Reward Signal:</strong>
+        {% if result.reward_signal > 0 %}
+            <span class="positive">{{ result.reward_signal }}</span>
+        {% else %}
+            <span class="negative">{{ result.reward_signal }}</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Learning Memory Size:</strong> {{ result.learning_memory_size }}</p>
+
+</div>
+
+{% else %}
+<p>No outcome data available.</p>
+{% endif %}
+
+<a href="/audit">⬅ Back to Audit</a>
+
+</body>
+</html>

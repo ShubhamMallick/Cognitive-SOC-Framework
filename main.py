@@ -30,8 +30,10 @@ from Agents.containment_agent import containment_agent
 from Agents.safe_pass_agent import safe_pass_agent
 from Agents.human_review_agent import human_review_agent
 from Agents.adaptive_monitoring_agent import adaptive_monitoring_agent
+from Agents.audit_memory_agent import audit_memory_agent
+from Agents.outcome_feedback_agent import outcome_feedback_agent
 
-
+from Agents.reinforcement_learning_agent import adaptive_policy
 # =====================================================
 # FASTAPI INITIALIZATION
 # =====================================================
@@ -41,6 +43,9 @@ app = FastAPI(title="Uncertainty-Aware SOC Framework")
 context_engine = ContextFramingEngine()
 agent_results = {}
 
+# -------------------------------------------------
+# 8️⃣ Reinforcement Policy Update (Silent)
+# -------------------------------------------------
 
 # =====================================================
 # LOAD MODELS
@@ -202,7 +207,38 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
 
     agent_results["execution"] = execution_result
 
+    # -------------------------------------------------
+    # 6️⃣ Audit & Incident Memory
+    # -------------------------------------------------
 
+    audit_result = audit_memory_agent(
+        raw=raw_features,
+        detection=detection_result,
+        context=context_result,
+        risk=risk_result,
+        coordination=coordination_result,
+        authority=authority_result,
+        execution=execution_result
+    )
+
+    agent_results["audit"] = audit_result
+
+    # -------------------------------------------------
+    # 7️⃣ Outcome & Feedback Agent
+    # -------------------------------------------------
+
+    outcome_result = outcome_feedback_agent(
+        raw=raw_features,
+        detection=detection_result,
+        coordination=coordination_result,
+        authority=authority_result,
+        execution=execution_result,
+        audit=audit_result
+    )
+
+    agent_results["outcome"] = outcome_result
+
+    
 # =====================================================
 # ANALYZE ROUTE
 # =====================================================
@@ -272,3 +308,17 @@ async def show_authority(request: Request):
 @app.get("/execution")
 async def show_execution(request: Request):
     return templates.TemplateResponse("execution.html", {"request": request, "result": agent_results.get("execution")})
+
+@app.get("/audit")
+async def show_audit(request: Request):
+    return templates.TemplateResponse(
+        "audit.html",
+        {"request": request, "result": agent_results.get("audit")}
+    )
+
+@app.get("/outcome")
+async def show_outcome(request: Request):
+    return templates.TemplateResponse(
+        "outcome.html",
+        {"request": request, "result": agent_results.get("outcome")}
+    )

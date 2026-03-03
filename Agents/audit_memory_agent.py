@@ -1,7 +1,20 @@
 from Agents.reinforcement_learning_agent import adaptive_policy
 
 
-def authority_agent(raw, detection, context, risk, coordination):
+def audit_memory_agent(raw, detection, context, risk, coordination, authority, execution):
+    """
+    Autonomous SOC Decision Authority
+    Final enforceable decision layer.
+
+    Integrates:
+    - Risk & Failure constraints
+    - Coordination intelligence
+    - Reinforcement-adaptive thresholds
+    """
+
+    # ---------------------------------------------------------
+    # Extract Inputs
+    # ---------------------------------------------------------
 
     fused_risk = coordination["fused_risk_score"]
     system_confidence = coordination["system_confidence"]
@@ -12,6 +25,10 @@ def authority_agent(raw, detection, context, risk, coordination):
     automation_safe = risk["automation_safe"]
     failure_mode = risk["failure_mode"]
 
+    # ---------------------------------------------------------
+    # Reinforcement-Adaptive Thresholds
+    # ---------------------------------------------------------
+
     containment_threshold = adaptive_policy["containment_threshold"]
     monitoring_threshold = adaptive_policy["monitoring_threshold"]
 
@@ -19,15 +36,31 @@ def authority_agent(raw, detection, context, risk, coordination):
     execution_mode = None
     override_triggered = False
 
-    # Hard overrides
-    if not automation_safe or failure_mode in ["SYSTEM_UNSTABLE", "MODEL_UNCERTAIN"]:
+    # =========================================================
+    # 1️⃣ HARD SAFETY OVERRIDES (NON-NEGOTIABLE)
+    # =========================================================
+
+    if not automation_safe:
         final_decision = "HUMAN_ANALYST_REVIEW"
         execution_mode = "MANUAL"
         override_triggered = True
 
+    elif failure_mode in ["SYSTEM_UNSTABLE", "MODEL_UNCERTAIN"]:
+        final_decision = "HUMAN_ANALYST_REVIEW"
+        execution_mode = "MANUAL"
+        override_triggered = True
+
+    # =========================================================
+    # 2️⃣ CRITICAL COMPROMISE IMMEDIATE CONTAINMENT
+    # =========================================================
+
     elif threat_stage == "CRITICAL COMPROMISE" and system_confidence >= 0.6:
         final_decision = "EXECUTE_AUTOMATED_CONTAINMENT"
         execution_mode = "AUTOMATED"
+
+    # =========================================================
+    # 3️⃣ ADAPTIVE RISK-BASED DECISION (RL-Driven)
+    # =========================================================
 
     elif fused_risk >= containment_threshold:
         if system_confidence >= 0.6 and instability_score < 0.5:
@@ -42,23 +75,38 @@ def authority_agent(raw, detection, context, risk, coordination):
         final_decision = "ADAPTIVE_MONITORING_MODE"
         execution_mode = "SEMI_AUTOMATED"
 
+    # =========================================================
+    # 4️⃣ COORDINATION FALLBACK LOGIC
+    # =========================================================
+
     else:
         if recommended_action == "ESCALATE_TO_HUMAN_ANALYST":
             final_decision = "HUMAN_ANALYST_REVIEW"
             execution_mode = "MANUAL"
+
         else:
             final_decision = "SAFE_PASS"
             execution_mode = "AUTOMATED"
 
-    # Severity classification
+    # =========================================================
+    # 5️⃣ SEVERITY CLASSIFICATION
+    # =========================================================
+
     if final_decision == "EXECUTE_AUTOMATED_CONTAINMENT":
         severity = "CRITICAL"
+
     elif final_decision == "HUMAN_ANALYST_REVIEW":
         severity = "HIGH"
+
     elif final_decision == "ADAPTIVE_MONITORING_MODE":
         severity = "MEDIUM"
+
     else:
         severity = "LOW"
+
+    # =========================================================
+    # 6️⃣ FINAL OUTPUT
+    # =========================================================
 
     return {
         "final_decision": final_decision,

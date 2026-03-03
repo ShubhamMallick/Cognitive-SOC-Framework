@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audit Logging & Incident Memory</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .critical { color: red; font-weight: bold; }
+        .safe { color: green; font-weight: bold; }
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>🧾 Audit Logging & Incident Memory</h1>
+
+{% if result %}
+
+<div class="box">
+
+    <p><strong>Total Incidents Logged:</strong> {{ result.total_incidents_logged }}</p>
+    <p><strong>Device Incident Count:</strong> {{ result.device_incident_count }}</p>
+    <p><strong>High Risk Events:</strong> {{ result.high_risk_event_count }}</p>
+    <p><strong>Risk Trend:</strong> {{ result.risk_trend }}</p>
+
+    <p><strong>Persistent Threat Detected:</strong>
+        {% if result.persistent_threat_detected %}
+            <span class="critical">YES</span>
+        {% else %}
+            <span class="safe">NO</span>
+        {% endif %}
+    </p>
+
+</div>
+
+{% else %}
+<p>No audit records available.</p>
+{% endif %}
+
+<a href="/authority">⬅ Back to Authority</a>
+
+</body>
+</html>
