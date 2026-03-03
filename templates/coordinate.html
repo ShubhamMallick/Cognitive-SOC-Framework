@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Agent Coordination & SOC Decision Authority</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+
+        .box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .critical { color: red; font-weight: bold; }
+        .high { color: #ff5733; font-weight: bold; }
+        .medium { color: orange; font-weight: bold; }
+        .low { color: green; font-weight: bold; }
+
+        .action {
+            padding: 10px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .contain { background: red; color: white; }
+        .escalate { background: orange; color: white; }
+        .monitor { background: #007bff; color: white; }
+        .safe { background: green; color: white; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        th {
+            background: #f4f4f4;
+        }
+
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 Multi-Agent Coordination & Autonomous SOC Authority</h1>
+
+{% if result %}
+
+<div class="box">
+    <h2>System-Level Risk Assessment</h2>
+    <p><strong>Fused Risk Score:</strong> {{ "%.4f"|format(result.fused_risk_score) }}</p>
+    <p><strong>System Confidence:</strong> {{ "%.4f"|format(result.system_confidence) }}</p>
+    <p><strong>Escalation Factor:</strong> {{ "%.4f"|format(result.escalation_factor) }}</p>
+
+    <p><strong>Conflict Level:</strong>
+        {% if result.conflict_level == "HIGH" %}
+            <span class="critical">HIGH</span>
+        {% elif result.conflict_level == "MODERATE" %}
+            <span class="medium">MODERATE</span>
+        {% else %}
+            <span class="low">LOW</span>
+        {% endif %}
+    </p>
+</div>
+
+<div class="box">
+    <h2>Threat Intelligence Summary</h2>
+    <p><strong>Dominant Threat:</strong>
+        {% if result.dominant_threat == "RANSOMWARE" %}
+            <span class="critical">RANSOMWARE</span>
+        {% else %}
+            <span class="high">DATA EXFILTRATION</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Threat Stage:</strong>
+        {% if result.threat_stage == "CRITICAL COMPROMISE" %}
+            <span class="critical">CRITICAL COMPROMISE</span>
+        {% elif result.threat_stage == "ACTIVE ATTACK" %}
+            <span class="high">ACTIVE ATTACK</span>
+        {% elif result.threat_stage == "SUSPICIOUS ACTIVITY" %}
+            <span class="medium">SUSPICIOUS ACTIVITY</span>
+        {% else %}
+            <span class="low">LOW RISK</span>
+        {% endif %}
+    </p>
+</div>
+
+<div class="box">
+    <h2>Structured Risk Profile</h2>
+    <table>
+        <tr>
+            <th>Component</th>
+            <th>Score</th>
+        </tr>
+        <tr>
+            <td>Threat Score</td>
+            <td>{{ "%.4f"|format(result.structured_profile.threat_score) }}</td>
+        </tr>
+        <tr>
+            <td>Impact Score</td>
+            <td>{{ "%.4f"|format(result.structured_profile.impact_score) }}</td>
+        </tr>
+        <tr>
+            <td>Privacy Score</td>
+            <td>{{ "%.4f"|format(result.structured_profile.privacy_score) }}</td>
+        </tr>
+        <tr>
+            <td>Policy Score</td>
+            <td>{{ "%.4f"|format(result.structured_profile.policy_score) }}</td>
+        </tr>
+        <tr>
+            <td>Context Risk</td>
+            <td>{{ "%.4f"|format(result.structured_profile.context_risk) }}</td>
+        </tr>
+        <tr>
+            <td>Anomaly Probability</td>
+            <td>{{ "%.4f"|format(result.structured_profile.anomaly_probability) }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="box">
+    <h2>Recommended SOC Action</h2>
+
+    {% if result.recommended_action == "EXECUTE_AUTOMATED_CONTAINMENT" %}
+        <div class="action contain">
+            EXECUTE AUTOMATED CONTAINMENT
+        </div>
+    {% elif result.recommended_action == "ESCALATE_TO_HUMAN_ANALYST" %}
+        <div class="action escalate">
+            ESCALATE TO HUMAN ANALYST
+        </div>
+    {% elif result.recommended_action == "ENABLE_ADAPTIVE_MONITORING" %}
+        <div class="action monitor">
+            ENABLE ADAPTIVE MONITORING
+        </div>
+    {% else %}
+        <div class="action safe">
+            SAFE PASS
+        </div>
+    {% endif %}
+
+</div>
+
+{% else %}
+<p>No coordination results available. Please run analysis first.</p>
+{% endif %}
+
+<a href="/results">⬅ Back to Dashboard</a>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Autonomous SOC Decision Authority</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .critical { color: red; font-weight: bold; }
+        .high { color: orange; font-weight: bold; }
+        .medium { color: blue; font-weight: bold; }
+        .low { color: green; font-weight: bold; }
+        a { display:inline-block; margin-top:20px; margin-right:10px; }
+    </style>
+</head>
+<body>
+
+<h1>🏛 Autonomous SOC Decision Authority</h1>
+
+{% if result %}
+
+<div class="box">
+
+    <p><strong>Final Decision:</strong>
+        {% if result.severity_level == "CRITICAL" %}
+            <span class="critical">{{ result.final_decision }}</span>
+        {% elif result.severity_level == "HIGH" %}
+            <span class="high">{{ result.final_decision }}</span>
+        {% elif result.severity_level == "MEDIUM" %}
+            <span class="medium">{{ result.final_decision }}</span>
+        {% else %}
+            <span class="low">{{ result.final_decision }}</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Execution Mode:</strong> {{ result.execution_mode }}</p>
+    <p><strong>Severity Level:</strong> {{ result.severity_level }}</p>
+    <p><strong>Decision Confidence:</strong> {{ result.decision_confidence }}</p>
+    <p><strong>Instability Score:</strong> {{ result.instability_score }}</p>
+
+    <p><strong>Override Triggered:</strong>
+        {% if result.override_triggered %}
+            <span class="high">YES</span>
+        {% else %}
+            <span class="low">NO</span>
+        {% endif %}
+    </p>
+
+</div>
+
+{% else %}
+<p>No authority decision available.</p>
+{% endif %}
+
+<a href="/execution">➡ View Execution Details</a>
+<a href="/coordinate">⬅ Back to Coordination</a>
+
+</body>
+</html>

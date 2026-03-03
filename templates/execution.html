@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOC Execution Layer</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        .critical { color: red; font-weight: bold; }
+        .safe { color: green; font-weight: bold; }
+        ul { margin-top: 10px; }
+        a { display:inline-block; margin-top:20px; }
+    </style>
+</head>
+<body>
+
+<h1>⚙ SOC Execution Layer</h1>
+
+{% if result %}
+
+<div class="box">
+
+    {% if result.containment_triggered %}
+        <p class="critical"><strong>Containment Executed</strong></p>
+        <p><strong>Status:</strong> {{ result.status }}</p>
+        <p><strong>Actions:</strong></p>
+        <ul>
+            {% for action in result.actions_executed %}
+                <li>{{ action }}</li>
+            {% endfor %}
+        </ul>
+
+    {% elif result.escalation %}
+        <p class="critical"><strong>Escalated to Human Analyst</strong></p>
+        <p><strong>Assigned Queue:</strong> {{ result.assigned_queue }}</p>
+        <p><strong>Priority:</strong> {{ result.ticket_priority }}</p>
+        <p><strong>Status:</strong> {{ result.status }}</p>
+
+    {% elif result.monitoring_enabled %}
+        <p><strong>Adaptive Monitoring Enabled</strong></p>
+        <p><strong>Duration (hours):</strong> {{ result.monitoring_duration_hours }}</p>
+        <p><strong>Log Level:</strong> {{ result.log_level }}</p>
+        <p><strong>Status:</strong> {{ result.status }}</p>
+
+    {% else %}
+        <p class="safe"><strong>Safe Pass — No Action Required</strong></p>
+        <p><strong>Status:</strong> {{ result.status }}</p>
+        <p>{{ result.log_entry }}</p>
+    {% endif %}
+
+</div>
+
+{% else %}
+<p>No execution details available.</p>
+{% endif %}
+
+<a href="/authority">⬅ Back to Authority</a>
+
+</body>
+</html>

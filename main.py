@@ -21,6 +21,15 @@ from Agents.policy_agent import policy_agent
 from Agents.threat_agent import threat_agent
 from Agents.impact_agent import impact_agent
 from Agents.privacy_agent import privacy_agent
+from Agents.risk_failure_agent import risk_failure_agent
+from Agents.coordination_engine import coordination_engine
+from Agents.authority_agent import authority_agent
+
+# Execution Agents
+from Agents.containment_agent import containment_agent
+from Agents.safe_pass_agent import safe_pass_agent
+from Agents.human_review_agent import human_review_agent
+from Agents.adaptive_monitoring_agent import adaptive_monitoring_agent
 
 
 # =====================================================
@@ -30,8 +39,6 @@ from Agents.privacy_agent import privacy_agent
 app = FastAPI(title="Uncertainty-Aware SOC Framework")
 
 context_engine = ContextFramingEngine()
-
-# Store agent outputs (temporary in-memory storage)
 agent_results = {}
 
 
@@ -46,13 +53,7 @@ df_ref = pd.read_csv(
     os.path.join(BASE_DIR, "Anomaly_Detection", "uncertainty_aware_soc_dataset_30000_noisy.csv")
 )
 
-categorical_cols = [
-    "device_id",
-    "device_type",
-    "department",
-    "firmware_version"
-]
-
+categorical_cols = ["device_id", "device_type", "department", "firmware_version"]
 encoders = {}
 
 for col in categorical_cols:
@@ -71,24 +72,20 @@ class DeviceData(BaseModel):
     department: str
     criticality_level: int
     firmware_version: str
-
     cpu_usage_percent: float
     memory_usage_percent: float
     disk_write_mb_per_min: float
     disk_read_mb_per_min: float
     process_spawn_count: int
-
     file_rename_count: int
     new_file_creation_count: int
     file_entropy_avg: float
     encrypted_extension_ratio: float
-
     outbound_traffic_mb: float
     inbound_traffic_mb: float
     unique_external_ips: int
     dns_request_count: int
     unusual_port_flag: int
-
     privilege_escalation_flag: int
     configuration_change_flag: int
     antivirus_alert_flag: int
@@ -96,7 +93,7 @@ class DeviceData(BaseModel):
 
 
 # =====================================================
-# HEALTH CHECK
+# HOME ROUTE
 # =====================================================
 
 @app.get("/")
@@ -105,7 +102,7 @@ async def home(request: Request):
 
 
 # =====================================================
-# RESULTS ROUTE (UNCHANGED)
+# RESULTS ROUTE
 # =====================================================
 
 @app.get("/results")
@@ -115,32 +112,22 @@ async def show_results(request: Request, data: str):
 
 
 # =====================================================
-# PARALLEL AGENT EXECUTION FUNCTION
+# CORE PIPELINE
 # =====================================================
 
 async def run_agents_parallel(raw_features, detection_result, context_result):
 
-    policy_task = asyncio.to_thread(
-        policy_agent, raw_features, detection_result, context_result
-    )
+    # -------------------------------------------------
+    # 1️⃣ Parallel Agents
+    # -------------------------------------------------
 
-    threat_task = asyncio.to_thread(
-        threat_agent, raw_features, detection_result, context_result
-    )
-
-    impact_task = asyncio.to_thread(
-        impact_agent, raw_features, detection_result, context_result
-    )
-
-    privacy_task = asyncio.to_thread(
-        privacy_agent, raw_features, detection_result, context_result
-    )
+    policy_task = asyncio.to_thread(policy_agent, raw_features, detection_result, context_result)
+    threat_task = asyncio.to_thread(threat_agent, raw_features, detection_result, context_result)
+    impact_task = asyncio.to_thread(impact_agent, raw_features, detection_result, context_result)
+    privacy_task = asyncio.to_thread(privacy_agent, raw_features, detection_result, context_result)
 
     policy_result, threat_result, impact_result, privacy_result = await asyncio.gather(
-        policy_task,
-        threat_task,
-        impact_task,
-        privacy_task
+        policy_task, threat_task, impact_task, privacy_task
     )
 
     agent_results["policy"] = policy_result
@@ -148,34 +135,89 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
     agent_results["impact"] = impact_result
     agent_results["privacy"] = privacy_result
 
+    # -------------------------------------------------
+    # 2️⃣ Risk & Failure
+    # -------------------------------------------------
+
+    risk_result = risk_failure_agent(
+        raw=raw_features,
+        detection=detection_result,
+        context=context_result,
+        policy=policy_result,
+        threat=threat_result,
+        impact=impact_result,
+        privacy=privacy_result
+    )
+
+    agent_results["risk"] = risk_result
+
+    # -------------------------------------------------
+    # 3️⃣ Coordination
+    # -------------------------------------------------
+
+    coordination_result = coordination_engine(
+        raw=raw_features,
+        detection=detection_result,
+        context=context_result,
+        policy=policy_result,
+        threat=threat_result,
+        impact=impact_result,
+        privacy=privacy_result,
+        risk=risk_result
+    )
+
+    agent_results["coordination"] = coordination_result
+
+    # -------------------------------------------------
+    # 4️⃣ Authority
+    # -------------------------------------------------
+
+    authority_result = authority_agent(
+        raw=raw_features,
+        detection=detection_result,
+        context=context_result,
+        risk=risk_result,
+        coordination=coordination_result
+    )
+
+    agent_results["authority"] = authority_result
+
+    # -------------------------------------------------
+    # 5️⃣ Execution Layer
+    # -------------------------------------------------
+
+    decision = authority_result["final_decision"]
+
+    if decision == "EXECUTE_AUTOMATED_CONTAINMENT":
+        execution_result = containment_agent(raw_features, authority_result)
+
+    elif decision == "HUMAN_ANALYST_REVIEW":
+        execution_result = human_review_agent(raw_features, authority_result)
+
+    elif decision == "ADAPTIVE_MONITORING_MODE":
+        execution_result = adaptive_monitoring_agent(raw_features, authority_result)
+
+    else:
+        execution_result = safe_pass_agent(raw_features, authority_result)
+
+    agent_results["execution"] = execution_result
+
 
 # =====================================================
-# ANALYZE ROUTE (Original Logic Preserved)
+# ANALYZE ROUTE
 # =====================================================
 
 @app.post("/analyze")
 async def analyze_device(data: DeviceData):
 
     try:
-        # Convert input to dictionary
         input_dict = data.dict()
-
-        # Convert to DataFrame
         input_df = pd.DataFrame([input_dict])
 
-        # Encode categorical columns
         for col in categorical_cols:
             input_df[col] = encoders[col].transform(input_df[col])
 
-        # ==============================
-        # Run Anomaly Detection
-        # ==============================
-
         detection_result = run_detection(input_df, rf, iso)
-
-        # ==============================
-        # Run Context Framing
-        # ==============================
 
         context_result = context_engine.frame_context(
             anomaly_prob=detection_result["anomaly_probability"],
@@ -184,15 +226,7 @@ async def analyze_device(data: DeviceData):
             features=input_dict
         )
 
-        # ==============================
-        # Run Agents in Parallel
-        # ==============================
-
         await run_agents_parallel(input_dict, detection_result, context_result)
-
-        # ==============================
-        # Return Original Response (UNCHANGED)
-        # ==============================
 
         return JSONResponse({
             "detection": detection_result,
@@ -200,55 +234,41 @@ async def analyze_device(data: DeviceData):
         })
 
     except Exception as e:
-        return JSONResponse(
-            status_code=400,
-            content={"error": str(e)}
-        )
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 
 # =====================================================
-# AGENT HTML ENDPOINTS (Send Agent Data)
+# HTML ENDPOINTS
 # =====================================================
 
 @app.get("/policy")
 async def show_policy(request: Request):
-    return templates.TemplateResponse(
-        "policy.html",
-        {
-            "request": request,
-            "result": agent_results.get("policy")
-        }
-    )
-
+    return templates.TemplateResponse("policy.html", {"request": request, "result": agent_results.get("policy")})
 
 @app.get("/threat")
 async def show_threat(request: Request):
-    return templates.TemplateResponse(
-        "threat.html",
-        {
-            "request": request,
-            "result": agent_results.get("threat")
-        }
-    )
-
+    return templates.TemplateResponse("threat.html", {"request": request, "result": agent_results.get("threat")})
 
 @app.get("/impact")
 async def show_impact(request: Request):
-    return templates.TemplateResponse(
-        "impact.html",
-        {
-            "request": request,
-            "result": agent_results.get("impact")
-        }
-    )
-
+    return templates.TemplateResponse("impact.html", {"request": request, "result": agent_results.get("impact")})
 
 @app.get("/privacy")
 async def show_privacy(request: Request):
-    return templates.TemplateResponse(
-        "privacy.html",
-        {
-            "request": request,
-            "result": agent_results.get("privacy")
-        }
-    )
+    return templates.TemplateResponse("privacy.html", {"request": request, "result": agent_results.get("privacy")})
+
+@app.get("/risk")
+async def show_risk(request: Request):
+    return templates.TemplateResponse("risk_failure.html", {"request": request, "result": agent_results.get("risk")})
+
+@app.get("/coordinate")
+async def show_coordination(request: Request):
+    return templates.TemplateResponse("coordinate.html", {"request": request, "result": agent_results.get("coordination")})
+
+@app.get("/authority")
+async def show_authority(request: Request):
+    return templates.TemplateResponse("authority.html", {"request": request, "result": agent_results.get("authority")})
+
+@app.get("/execution")
+async def show_execution(request: Request):
+    return templates.TemplateResponse("execution.html", {"request": request, "result": agent_results.get("execution")})
