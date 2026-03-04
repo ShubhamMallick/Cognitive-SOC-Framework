@@ -9,6 +9,9 @@ def outcome_feedback_agent(raw, detection, coordination, authority, execution, a
     decision = authority["final_decision"]
     fused_risk = coordination["fused_risk_score"]
 
+    # Context key for adaptive learning
+    context_key = f"{raw['department']}_{raw['criticality_level']}"
+
     # ---------------------------------------------------------
     # Determine if actual threat likely existed
     # (Simulated ground truth logic)
@@ -35,8 +38,8 @@ def outcome_feedback_agent(raw, detection, coordination, authority, execution, a
     else:
         reward = 0.0
 
-    # Store reward for reinforcement
-    learning_memory.append(reward)
+    # Store reward with context for reinforcement
+    learning_memory.append((reward, context_key))
 
     return {
         "actual_threat_detected": actual_threat_detected,

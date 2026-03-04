@@ -26,11 +26,16 @@ def audit_memory_agent(raw, detection, context, risk, coordination, authority, e
     failure_mode = risk["failure_mode"]
 
     # ---------------------------------------------------------
-    # Reinforcement-Adaptive Thresholds
+    # Reinforcement-Adaptive Thresholds (Context-Aware)
     # ---------------------------------------------------------
 
-    containment_threshold = adaptive_policy["containment_threshold"]
-    monitoring_threshold = adaptive_policy["monitoring_threshold"]
+    # Context-specific policy selection
+    context_key = f"{raw['department']}_{raw['criticality_level']}"
+
+    policy = adaptive_policy.get(context_key, adaptive_policy["default"])
+
+    containment_threshold = policy["containment_threshold"]
+    monitoring_threshold = policy["monitoring_threshold"]
 
     final_decision = None
     execution_mode = None
