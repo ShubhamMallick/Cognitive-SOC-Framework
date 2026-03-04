@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Privacy & Regulatory Agent</title>
     <style>
-        body { font-family: Arial; margin: 30px; }
-        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .high { color: red; font-weight: bold; }
         .medium { color: orange; font-weight: bold; }
         .low { color: green; font-weight: bold; }
-        a { display:inline-block; margin-top:20px; }
+        a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
+        a:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -44,6 +46,7 @@
 <p>No privacy results available.</p>
 {% endif %}
 
+<a href="/risk">View Risk Analysis</a>
 <a href="/results">⬅ Back to Dashboard</a>
 
 </body>

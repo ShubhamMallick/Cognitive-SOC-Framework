@@ -56,3 +56,5 @@ gTTS==2.5.1
 pymongo==4.16.0
 
 streamlit==1.32.2
+
+flwr==1.8.0

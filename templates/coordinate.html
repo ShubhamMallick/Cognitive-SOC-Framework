@@ -1,49 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Multi-Agent Coordination & SOC Decision Authority</title>
     <style>
-        body { font-family: Arial; margin: 30px; }
-
-        .box {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .critical { color: red; font-weight: bold; }
         .high { color: #ff5733; font-weight: bold; }
         .medium { color: orange; font-weight: bold; }
         .low { color: green; font-weight: bold; }
-
-        .action {
-            padding: 10px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
+        .action { padding: 10px; border-radius: 6px; display: inline-block; margin-top: 10px; }
         .contain { background: red; color: white; }
         .escalate { background: orange; color: white; }
         .monitor { background: #007bff; color: white; }
         .safe { background: green; color: white; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table, th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
-
-        th {
-            background: #f4f4f4;
-        }
-
-        a { display:inline-block; margin-top:20px; }
+        table { width: 100%; border-collapse: collapse; }
+        table, th, td { border: 1px solid #ccc; padding: 8px; }
+        th { background: #f4f4f4; }
+        a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
+        a:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -153,6 +129,7 @@
 <p>No coordination results available. Please run analysis first.</p>
 {% endif %}
 
+<a href="/authority">View Authority Decision</a>
 <a href="/results">⬅ Back to Dashboard</a>
 
 </body>
