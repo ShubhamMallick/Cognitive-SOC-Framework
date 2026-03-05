@@ -12,11 +12,23 @@ import asyncio
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# Import detection + context modules
+# =====================================================
+# IMPORT DETECTION + CONTEXT MODULES
+# =====================================================
+
 from Anomaly_Detection import run_detection
 from Anomaly_Detection.Context_Framing import ContextFramingEngine
 
-# Import Agents
+# =====================================================
+# IMPORT CONTEXT EXPLANATION ROUTER
+# =====================================================
+
+from routers.context_explain_router import router as context_router
+
+# =====================================================
+# IMPORT AGENTS
+# =====================================================
+
 from Agents.policy_agent import policy_agent
 from Agents.threat_agent import threat_agent
 from Agents.impact_agent import impact_agent
@@ -34,18 +46,18 @@ from Agents.audit_memory_agent import audit_memory_agent
 from Agents.outcome_feedback_agent import outcome_feedback_agent
 
 from Agents.reinforcement_learning_agent import adaptive_policy
+
 # =====================================================
 # FASTAPI INITIALIZATION
 # =====================================================
 
 app = FastAPI(title="Uncertainty-Aware SOC Framework")
 
+# Register router for LLM explanations
+app.include_router(context_router)
+
 context_engine = ContextFramingEngine()
 agent_results = {}
-
-# -------------------------------------------------
-# 8️⃣ Reinforcement Policy Update (Silent)
-# -------------------------------------------------
 
 # =====================================================
 # LOAD MODELS
@@ -238,7 +250,7 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
 
     agent_results["outcome"] = outcome_result
 
-    
+
 # =====================================================
 # ANALYZE ROUTE
 # =====================================================
@@ -281,33 +293,41 @@ async def analyze_device(data: DeviceData):
 async def show_policy(request: Request):
     return templates.TemplateResponse("policy.html", {"request": request, "result": agent_results.get("policy")})
 
+
 @app.get("/threat")
 async def show_threat(request: Request):
     return templates.TemplateResponse("threat.html", {"request": request, "result": agent_results.get("threat")})
+
 
 @app.get("/impact")
 async def show_impact(request: Request):
     return templates.TemplateResponse("impact.html", {"request": request, "result": agent_results.get("impact")})
 
+
 @app.get("/privacy")
 async def show_privacy(request: Request):
     return templates.TemplateResponse("privacy.html", {"request": request, "result": agent_results.get("privacy")})
+
 
 @app.get("/risk")
 async def show_risk(request: Request):
     return templates.TemplateResponse("risk_failure.html", {"request": request, "result": agent_results.get("risk")})
 
+
 @app.get("/coordinate")
 async def show_coordination(request: Request):
     return templates.TemplateResponse("coordinate.html", {"request": request, "result": agent_results.get("coordination")})
+
 
 @app.get("/authority")
 async def show_authority(request: Request):
     return templates.TemplateResponse("authority.html", {"request": request, "result": agent_results.get("authority")})
 
+
 @app.get("/execution")
 async def show_execution(request: Request):
     return templates.TemplateResponse("execution.html", {"request": request, "result": agent_results.get("execution")})
+
 
 @app.get("/audit")
 async def show_audit(request: Request):
@@ -315,6 +335,7 @@ async def show_audit(request: Request):
         "audit.html",
         {"request": request, "result": agent_results.get("audit")}
     )
+
 
 @app.get("/outcome")
 async def show_outcome(request: Request):
