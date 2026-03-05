@@ -11,6 +11,26 @@
         .moderate { color: green; font-weight: bold; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -20,18 +40,23 @@
 {% if result %}
 
 <div class="box">
-    <p><strong>Impact Score:</strong> {{ "%.4f"|format(result.impact_score) }}</p>
-    <p><strong>Propagation Factor:</strong> {{ "%.4f"|format(result.propagation_factor) }}</p>
+    <p><strong>Impact Score:</strong> {{ "%.4f"|format(result.impact.impact_score) }}</p>
+    <p><strong>Propagation Factor:</strong> {{ "%.4f"|format(result.impact.propagation_factor) }}</p>
 
     <p><strong>Severity Level:</strong>
-        {% if result.severity == "CRITICAL" %}
+        {% if result.impact.severity == "CRITICAL" %}
             <span class="critical">CRITICAL</span>
-        {% elif result.severity == "HIGH" %}
+        {% elif result.impact.severity == "HIGH" %}
             <span class="high">HIGH</span>
         {% else %}
             <span class="moderate">MODERATE</span>
         {% endif %}
     </p>
+
+    <button id="explainImpactBtn" class="explain-btn">Generate AI Impact Explanation</button>
+
+    <div id="impact_explanations"></div>
+
 </div>
 
 {% else %}
@@ -40,6 +65,71 @@
 
 <a href="/risk">View Risk Analysis</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var impactResultStr = '{{ result|tojson|safe }}';
+var impactResult = impactResultStr ? JSON.parse(impactResultStr) : {};
+
+const explainImpactBtn = document.getElementById("explainImpactBtn");
+
+if (explainImpactBtn) {
+    explainImpactBtn.addEventListener("click", async () => {
+        const div = document.getElementById("impact_explanations");
+
+        div.innerHTML = "<p>Generating AI impact explanations...</p>";
+
+        try {
+            const response = await fetch("/impact-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: impactResult.raw || {},
+                    detection: impactResult.detection || {},
+                    context: impactResult.context || {},
+                    impact: impactResult.impact || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Impact Explanation</h3>
+                <table>
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No impact explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting impact explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

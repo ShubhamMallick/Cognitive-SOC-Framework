@@ -11,6 +11,26 @@
         .low { color: green; font-weight: bold; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -20,16 +40,21 @@
 {% if result %}
 
 <div class="box">
-    <p><strong>Ransomware Probability:</strong> {{ "%.4f"|format(result.ransomware_probability) }}</p>
-    <p><strong>Data Exfiltration Probability:</strong> {{ "%.4f"|format(result.exfiltration_probability) }}</p>
+    <p><strong>Ransomware Probability:</strong> {{ "%.4f"|format(result.threat.ransomware_probability) }}</p>
+    <p><strong>Data Exfiltration Probability:</strong> {{ "%.4f"|format(result.threat.exfiltration_probability) }}</p>
 
     <p><strong>Dominant Threat:</strong>
-        {% if result.dominant_threat == "RANSOMWARE" %}
+        {% if result.threat.dominant_threat == "RANSOMWARE" %}
             <span class="high">RANSOMWARE</span>
         {% else %}
             <span class="medium">DATA EXFILTRATION</span>
         {% endif %}
     </p>
+
+    <button id="explainThreatBtn" class="explain-btn">Generate AI Threat Explanation</button>
+
+    <div id="threat_explanations"></div>
+
 </div>
 
 {% else %}
@@ -38,6 +63,71 @@
 
 <a href="/risk">View Risk Analysis</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var threatResultStr = '{{ result|tojson|safe }}';
+var threatResult = threatResultStr ? JSON.parse(threatResultStr) : {};
+
+const explainThreatBtn = document.getElementById("explainThreatBtn");
+
+if (explainThreatBtn) {
+    explainThreatBtn.addEventListener("click", async () => {
+        const div = document.getElementById("threat_explanations");
+
+        div.innerHTML = "<p>Generating AI threat explanations...</p>";
+
+        try {
+            const response = await fetch("/threat-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: threatResult.raw || {},
+                    detection: threatResult.detection || {},
+                    context: threatResult.context || {},
+                    threat: threatResult.threat || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Threat Explanation</h3>
+                <table>
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No threat explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting threat explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

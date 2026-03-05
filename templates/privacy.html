@@ -11,6 +11,26 @@
         .low { color: green; font-weight: bold; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -20,13 +40,13 @@
 {% if result %}
 
 <div class="box">
-    <p><strong>Privacy Risk Score:</strong> {{ "%.4f"|format(result.privacy_risk_score) }}</p>
-    <p><strong>Confidence Adjustment:</strong> {{ "%.4f"|format(result.confidence_adjusted) }}</p>
+    <p><strong>Privacy Risk Score:</strong> {{ "%.4f"|format(result.privacy.privacy_risk_score) }}</p>
+    <p><strong>Confidence Adjustment:</strong> {{ "%.4f"|format(result.privacy.confidence_adjusted) }}</p>
 
     <p><strong>Breach Level:</strong>
-        {% if result.breach_level == "HIGH" %}
+        {% if result.privacy.breach_level == "HIGH" %}
             <span class="high">HIGH</span>
-        {% elif result.breach_level == "MEDIUM" %}
+        {% elif result.privacy.breach_level == "MEDIUM" %}
             <span class="medium">MEDIUM</span>
         {% else %}
             <span class="low">LOW</span>
@@ -34,12 +54,17 @@
     </p>
 
     <p><strong>Regulatory Escalation Required:</strong>
-        {% if result.breach_risk %}
+        {% if result.privacy.breach_risk %}
             <span class="high">YES</span>
         {% else %}
             No
         {% endif %}
     </p>
+
+    <button id="explainPrivacyBtn" class="explain-btn">Generate AI Privacy Explanation</button>
+
+    <div id="privacy_explanations"></div>
+
 </div>
 
 {% else %}
@@ -48,6 +73,71 @@
 
 <a href="/risk">View Risk Analysis</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var privacyResultStr = '{{ result|tojson|safe }}';
+var privacyResult = privacyResultStr ? JSON.parse(privacyResultStr) : {};
+
+const explainPrivacyBtn = document.getElementById("explainPrivacyBtn");
+
+if (explainPrivacyBtn) {
+    explainPrivacyBtn.addEventListener("click", async () => {
+        const div = document.getElementById("privacy_explanations");
+
+        div.innerHTML = "<p>Generating AI privacy explanations...</p>";
+
+        try {
+            const response = await fetch("/privacy-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: privacyResult.raw || {},
+                    detection: privacyResult.detection || {},
+                    context: privacyResult.context || {},
+                    privacy: privacyResult.privacy || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Privacy Explanation</h3>
+                <table>
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No privacy explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting privacy explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

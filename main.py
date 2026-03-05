@@ -26,6 +26,20 @@ from Anomaly_Detection.Context_Framing import ContextFramingEngine
 from routers.context_explain_router import router as context_router
 
 # =====================================================
+# IMPORT POLICY EXPLANATION ROUTER
+# =====================================================
+
+from routers.policy_explain_router import router as policy_router
+from routers.threat_explain_router import router as threat_router
+from routers.impact_explain_router import router as impact_router
+from routers.privacy_explain_router import router as privacy_router
+from routers.risk_explain_router import router as risk_router
+from routers.coordinate_explain_router import router as coordinate_router
+from routers.authority_explain_router import router as authority_router
+from routers.audit_explain_router import router as audit_router
+from routers.execution_explain_router import router as execution_router
+
+# =====================================================
 # IMPORT AGENTS
 # =====================================================
 
@@ -55,6 +69,15 @@ app = FastAPI(title="Uncertainty-Aware SOC Framework")
 
 # Register router for LLM explanations
 app.include_router(context_router)
+app.include_router(policy_router)
+app.include_router(threat_router)
+app.include_router(impact_router)
+app.include_router(privacy_router)
+app.include_router(risk_router)
+app.include_router(coordinate_router)
+app.include_router(authority_router)
+app.include_router(audit_router)
+app.include_router(execution_router)
 
 context_engine = ContextFramingEngine()
 agent_results = {}
@@ -291,51 +314,121 @@ async def analyze_device(data: DeviceData):
 
 @app.get("/policy")
 async def show_policy(request: Request):
-    return templates.TemplateResponse("policy.html", {"request": request, "result": agent_results.get("policy")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "policy": agent_results.get("policy", {})
+    }
+    return templates.TemplateResponse("policy.html", {"request": request, "result": complete_result})
 
 @app.get("/threat")
 async def show_threat(request: Request):
-    return templates.TemplateResponse("threat.html", {"request": request, "result": agent_results.get("threat")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "threat": agent_results.get("threat", {})
+    }
+    return templates.TemplateResponse("threat.html", {"request": request, "result": complete_result})
 
 @app.get("/impact")
 async def show_impact(request: Request):
-    return templates.TemplateResponse("impact.html", {"request": request, "result": agent_results.get("impact")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "impact": agent_results.get("impact", {})
+    }
+    return templates.TemplateResponse("impact.html", {"request": request, "result": complete_result})
 
 @app.get("/privacy")
 async def show_privacy(request: Request):
-    return templates.TemplateResponse("privacy.html", {"request": request, "result": agent_results.get("privacy")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "privacy": agent_results.get("privacy", {})
+    }
+    return templates.TemplateResponse("privacy.html", {"request": request, "result": complete_result})
 
 @app.get("/risk")
 async def show_risk(request: Request):
-    return templates.TemplateResponse("risk_failure.html", {"request": request, "result": agent_results.get("risk")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "policy": agent_results.get("policy", {}),
+        "threat": agent_results.get("threat", {}),
+        "impact": agent_results.get("impact", {}),
+        "privacy": agent_results.get("privacy", {}),
+        "risk": agent_results.get("risk", {})
+    }
+    return templates.TemplateResponse("risk_failure.html", {"request": request, "result": complete_result})
 
 @app.get("/coordinate")
 async def show_coordination(request: Request):
-    return templates.TemplateResponse("coordinate.html", {"request": request, "result": agent_results.get("coordination")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "policy": agent_results.get("policy", {}),
+        "threat": agent_results.get("threat", {}),
+        "impact": agent_results.get("impact", {}),
+        "privacy": agent_results.get("privacy", {}),
+        "risk": agent_results.get("risk", {}),
+        "coordinate": agent_results.get("coordination", {})
+    }
+    return templates.TemplateResponse("coordinate.html", {"request": request, "result": complete_result})
 
 @app.get("/authority")
 async def show_authority(request: Request):
-    return templates.TemplateResponse("authority.html", {"request": request, "result": agent_results.get("authority")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "risk": agent_results.get("risk", {}),
+        "coordinate": agent_results.get("coordination", {}),
+        "authority": agent_results.get("authority", {})
+    }
+    return templates.TemplateResponse("authority.html", {"request": request, "result": complete_result})
 
 @app.get("/execution")
 async def show_execution(request: Request):
-    return templates.TemplateResponse("execution.html", {"request": request, "result": agent_results.get("execution")})
-
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "authority": agent_results.get("authority", {}),
+        "execution": agent_results.get("execution", {})
+    }
+    return templates.TemplateResponse("execution.html", {"request": request, "result": complete_result})
 
 @app.get("/audit")
 async def show_audit(request: Request):
+    # Construct complete data structure for LLM explanations
+    complete_result = {
+        "raw": agent_results.get("raw", {}),
+        "detection": agent_results.get("detection", {}),
+        "context": agent_results.get("context", {}),
+        "risk": agent_results.get("risk", {}),
+        "coordinate": agent_results.get("coordination", {}),
+        "authority": agent_results.get("authority", {}),
+        "execution": agent_results.get("execution", {}),
+        "audit": agent_results.get("audit", {})
+    }
     return templates.TemplateResponse(
         "audit.html",
-        {"request": request, "result": agent_results.get("audit")}
+        {"request": request, "result": complete_result}
     )
-
 
 @app.get("/outcome")
 async def show_outcome(request: Request):

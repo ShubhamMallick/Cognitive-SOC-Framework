@@ -11,6 +11,26 @@
         .normal { color: green; font-weight: bold; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -20,12 +40,12 @@
 {% if result %}
 
 <div class="box">
-    <p><strong>Policy Risk Score:</strong> {{ "%.4f"|format(result.policy_risk_score) }}</p>
+    <p><strong>Policy Risk Score:</strong> {{ "%.4f"|format(result.policy.policy_risk_score) }}</p>
 
     <p><strong>Policy Level:</strong>
-        {% if result.policy_level == "CRITICAL" %}
+        {% if result.policy.policy_level == "CRITICAL" %}
             <span class="critical">CRITICAL</span>
-        {% elif result.policy_level == "ELEVATED" %}
+        {% elif result.policy.policy_level == "ELEVATED" %}
             <span class="elevated">ELEVATED</span>
         {% else %}
             <span class="normal">NORMAL</span>
@@ -33,12 +53,17 @@
     </p>
 
     <p><strong>Mandatory Action Required:</strong>
-        {% if result.mandatory_action %}
+        {% if result.policy.mandatory_action %}
             <span class="critical">YES</span>
         {% else %}
             No
         {% endif %}
     </p>
+
+    <button id="explainPolicyBtn" class="explain-btn">Generate AI Policy Explanation</button>
+
+    <div id="policy_explanations"></div>
+
 </div>
 
 {% else %}
@@ -47,6 +72,71 @@
 
 <a href="/risk">View Risk Analysis</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var policyResultStr = '{{ result|tojson|safe }}';
+var policyResult = policyResultStr ? JSON.parse(policyResultStr) : {};
+
+const explainPolicyBtn = document.getElementById("explainPolicyBtn");
+
+if (explainPolicyBtn) {
+    explainPolicyBtn.addEventListener("click", async () => {
+        const div = document.getElementById("policy_explanations");
+
+        div.innerHTML = "<p>Generating AI policy explanations...</p>";
+
+        try {
+            const response = await fetch("/policy-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: policyResult.raw || {},
+                    detection: policyResult.detection || {},
+                    context: policyResult.context || {},
+                    policy: policyResult.policy || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Policy Explanation</h3>
+                <table>
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No policy explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting policy explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

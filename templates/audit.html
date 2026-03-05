@@ -10,6 +10,26 @@
         .safe { color: green; font-weight: bold; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        .explanation-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .explanation-table th, .explanation-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .explanation-table th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -20,18 +40,34 @@
 
 <div class="box">
 
-    <p><strong>Total Incidents Logged:</strong> {{ result.total_incidents_logged }}</p>
-    <p><strong>Device Incident Count:</strong> {{ result.device_incident_count }}</p>
-    <p><strong>High Risk Events:</strong> {{ result.high_risk_event_count }}</p>
-    <p><strong>Risk Trend:</strong> {{ result.risk_trend }}</p>
+    <p><strong>Final Decision:</strong>
+        {% if result.audit.severity_level == "CRITICAL" %}
+            <span class="critical">{{ result.audit.final_decision }}</span>
+        {% elif result.audit.severity_level == "HIGH" %}
+            <span class="critical">{{ result.audit.final_decision }}</span>
+        {% elif result.audit.severity_level == "MEDIUM" %}
+            <span class="safe">{{ result.audit.final_decision }}</span>
+        {% else %}
+            <span class="safe">{{ result.audit.final_decision }}</span>
+        {% endif %}
+    </p>
 
-    <p><strong>Persistent Threat Detected:</strong>
-        {% if result.persistent_threat_detected %}
+    <p><strong>Execution Mode:</strong> {{ result.audit.execution_mode }}</p>
+    <p><strong>Severity Level:</strong> {{ result.audit.severity_level }}</p>
+    <p><strong>Decision Confidence:</strong> {{ result.audit.decision_confidence }}</p>
+    <p><strong>Instability Score:</strong> {{ result.audit.instability_score }}</p>
+
+    <p><strong>Override Triggered:</strong>
+        {% if result.audit.override_triggered %}
             <span class="critical">YES</span>
         {% else %}
             <span class="safe">NO</span>
         {% endif %}
     </p>
+
+    <button id="explainAuditBtn" class="explain-btn">Generate AI Audit Explanation</button>
+
+    <div id="audit_explanations"></div>
 
 </div>
 
@@ -41,6 +77,75 @@
 
 <a href="/outcome">➡ View Outcome Feedback</a>
 <a href="/authority">⬅ Back to Authority</a>
+
+<script>
+/* Safely load backend results */
+var auditResultStr = '{{ result|tojson|safe }}';
+var auditResult = auditResultStr ? JSON.parse(auditResultStr) : {};
+
+const explainAuditBtn = document.getElementById("explainAuditBtn");
+
+if (explainAuditBtn) {
+    explainAuditBtn.addEventListener("click", async () => {
+        const div = document.getElementById("audit_explanations");
+
+        div.innerHTML = "<p>Generating AI audit explanations...</p>";
+
+        try {
+            const response = await fetch("/audit-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: auditResult.raw || {},
+                    detection: auditResult.detection || {},
+                    context: auditResult.context || {},
+                    risk: auditResult.risk || {},
+                    coordinate: auditResult.coordinate || {},
+                    authority: auditResult.authority || {},
+                    execution: auditResult.execution || {},
+                    audit: auditResult.audit || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Audit Explanation</h3>
+                <table class="explanation-table">
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No audit explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting audit explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

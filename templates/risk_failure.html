@@ -14,6 +14,26 @@
         th { background: #f4f4f4; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        .explanation-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .explanation-table th, .explanation-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .explanation-table th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -26,29 +46,33 @@
     <h2>System Stability Metrics</h2>
 
     <p><strong>Instability Score:</strong>
-        {{ "%.4f"|format(result.instability_score) }}
+        {{ "%.4f"|format(result.risk.instability_score) }}
     </p>
 
     <p><strong>Agent Disagreement Score:</strong>
-        {{ "%.4f"|format(result.disagreement_score) }}
+        {{ "%.4f"|format(result.risk.disagreement_score) }}
     </p>
 
     <p><strong>Signal Volatility Score:</strong>
-        {{ "%.4f"|format(result.volatility_score) }}
+        {{ "%.4f"|format(result.risk.volatility_score) }}
     </p>
+
+    <button id="explainRiskBtn" class="explain-btn">Generate AI Risk Explanation</button>
+
+    <div id="risk_explanations"></div>
 </div>
 
 <div class="box">
     <h2>Failure Mode Assessment</h2>
 
     <p><strong>Failure Mode:</strong>
-        {% if result.failure_mode == "SYSTEM_UNSTABLE" %}
+        {% if result.risk.failure_mode == "SYSTEM_UNSTABLE" %}
             <span class="critical">SYSTEM UNSTABLE</span>
-        {% elif result.failure_mode == "AGENT_CONFLICT" %}
+        {% elif result.risk.failure_mode == "AGENT_CONFLICT" %}
             <span class="warning">AGENT CONFLICT</span>
-        {% elif result.failure_mode == "MODEL_UNCERTAIN" %}
+        {% elif result.risk.failure_mode == "MODEL_UNCERTAIN" %}
             <span class="warning">MODEL UNCERTAIN</span>
-        {% elif result.failure_mode == "HIGH_SIGNAL_VOLATILITY" %}
+        {% elif result.risk.failure_mode == "HIGH_SIGNAL_VOLATILITY" %}
             <span class="warning">HIGH SIGNAL VOLATILITY</span>
         {% else %}
             <span class="stable">STABLE</span>
@@ -56,7 +80,7 @@
     </p>
 
     <p><strong>Automation Safe:</strong>
-        {% if result.automation_safe %}
+        {% if result.risk.automation_safe %}
             <span class="stable">YES</span>
         {% else %}
             <span class="critical">NO</span>
@@ -74,27 +98,27 @@
         </tr>
         <tr>
             <td>Threat Score</td>
-            <td>{{ "%.4f"|format(result.risk_profile.threat_score) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.threat_score) }}</td>
         </tr>
         <tr>
             <td>Impact Score</td>
-            <td>{{ "%.4f"|format(result.risk_profile.impact_score) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.impact_score) }}</td>
         </tr>
         <tr>
             <td>Privacy Score</td>
-            <td>{{ "%.4f"|format(result.risk_profile.privacy_score) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.privacy_score) }}</td>
         </tr>
         <tr>
             <td>Policy Score</td>
-            <td>{{ "%.4f"|format(result.risk_profile.policy_score) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.policy_score) }}</td>
         </tr>
         <tr>
             <td>Context Risk</td>
-            <td>{{ "%.4f"|format(result.risk_profile.context_risk) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.context_risk) }}</td>
         </tr>
         <tr>
             <td>Anomaly Probability</td>
-            <td>{{ "%.4f"|format(result.risk_profile.anomaly_probability) }}</td>
+            <td>{{ "%.4f"|format(result.risk.risk_profile.anomaly_probability) }}</td>
         </tr>
     </table>
 </div>
@@ -105,6 +129,75 @@
 
 <a href="/coordinate">View Coordination</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var riskResultStr = '{{ result|tojson|safe }}';
+var riskResult = riskResultStr ? JSON.parse(riskResultStr) : {};
+
+const explainRiskBtn = document.getElementById("explainRiskBtn");
+
+if (explainRiskBtn) {
+    explainRiskBtn.addEventListener("click", async () => {
+        const div = document.getElementById("risk_explanations");
+
+        div.innerHTML = "<p>Generating AI risk explanations...</p>";
+
+        try {
+            const response = await fetch("/risk-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: riskResult.raw || {},
+                    detection: riskResult.detection || {},
+                    context: riskResult.context || {},
+                    policy: riskResult.policy || {},
+                    threat: riskResult.threat || {},
+                    impact: riskResult.impact || {},
+                    privacy: riskResult.privacy || {},
+                    risk: riskResult.risk || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Risk Explanation</h3>
+                <table class="explanation-table">
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No risk explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting risk explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

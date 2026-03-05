@@ -11,6 +11,26 @@
         ul { margin-top: 10px; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        .explanation-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .explanation-table th, .explanation-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .explanation-table th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -21,33 +41,37 @@
 
 <div class="box">
 
-    {% if result.containment_triggered %}
+    {% if result.execution.containment_triggered %}
         <p class="critical"><strong>Containment Executed</strong></p>
-        <p><strong>Status:</strong> {{ result.status }}</p>
+        <p><strong>Status:</strong> {{ result.execution.status }}</p>
         <p><strong>Actions:</strong></p>
         <ul>
-            {% for action in result.actions_executed %}
+            {% for action in result.execution.actions_executed %}
                 <li>{{ action }}</li>
             {% endfor %}
         </ul>
 
-    {% elif result.escalation %}
+    {% elif result.execution.escalation %}
         <p class="critical"><strong>Escalated to Human Analyst</strong></p>
-        <p><strong>Assigned Queue:</strong> {{ result.assigned_queue }}</p>
-        <p><strong>Priority:</strong> {{ result.ticket_priority }}</p>
-        <p><strong>Status:</strong> {{ result.status }}</p>
+        <p><strong>Assigned Queue:</strong> {{ result.execution.assigned_queue }}</p>
+        <p><strong>Priority:</strong> {{ result.execution.ticket_priority }}</p>
+        <p><strong>Status:</strong> {{ result.execution.status }}</p>
 
-    {% elif result.monitoring_enabled %}
+    {% elif result.execution.monitoring_enabled %}
         <p><strong>Adaptive Monitoring Enabled</strong></p>
-        <p><strong>Duration (hours):</strong> {{ result.monitoring_duration_hours }}</p>
-        <p><strong>Log Level:</strong> {{ result.log_level }}</p>
-        <p><strong>Status:</strong> {{ result.status }}</p>
+        <p><strong>Duration (hours):</strong> {{ result.execution.monitoring_duration_hours }}</p>
+        <p><strong>Log Level:</strong> {{ result.execution.log_level }}</p>
+        <p><strong>Status:</strong> {{ result.execution.status }}</p>
 
     {% else %}
         <p class="safe"><strong>Safe Pass — No Action Required</strong></p>
-        <p><strong>Status:</strong> {{ result.status }}</p>
-        <p>{{ result.log_entry }}</p>
+        <p><strong>Status:</strong> {{ result.execution.status }}</p>
+        <p>{{ result.execution.log_entry }}</p>
     {% endif %}
+
+    <button id="explainExecutionBtn" class="explain-btn">Generate AI Execution Explanation</button>
+
+    <div id="execution_explanations"></div>
 
 </div>
 
@@ -57,6 +81,72 @@
 
 <a href="/audit">➡ View Audit Logging</a>
 <a href="/authority">⬅ Back to Authority</a>
+
+<script>
+/* Safely load backend results */
+var executionResultStr = '{{ result|tojson|safe }}';
+var executionResult = executionResultStr ? JSON.parse(executionResultStr) : {};
+
+const explainExecutionBtn = document.getElementById("explainExecutionBtn");
+
+if (explainExecutionBtn) {
+    explainExecutionBtn.addEventListener("click", async () => {
+        const div = document.getElementById("execution_explanations");
+
+        div.innerHTML = "<p>Generating AI execution explanations...</p>";
+
+        try {
+            const response = await fetch("/execution-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: executionResult.raw || {},
+                    detection: executionResult.detection || {},
+                    context: executionResult.context || {},
+                    authority: executionResult.authority || {},
+                    execution: executionResult.execution || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Execution Explanation</h3>
+                <table class="explanation-table">
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No execution explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting execution explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>

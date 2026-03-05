@@ -20,6 +20,26 @@
         th { background: #f4f4f4; }
         a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
         a:hover { background: #0056b3; }
+        .explain-btn {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .explain-btn:hover { background: #1e7e34; }
+        .explanation-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .explanation-table th, .explanation-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .explanation-table th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -30,25 +50,29 @@
 
 <div class="box">
     <h2>System-Level Risk Assessment</h2>
-    <p><strong>Fused Risk Score:</strong> {{ "%.4f"|format(result.fused_risk_score) }}</p>
-    <p><strong>System Confidence:</strong> {{ "%.4f"|format(result.system_confidence) }}</p>
-    <p><strong>Escalation Factor:</strong> {{ "%.4f"|format(result.escalation_factor) }}</p>
+    <p><strong>Fused Risk Score:</strong> {{ "%.4f"|format(result.coordinate.fused_risk_score) }}</p>
+    <p><strong>System Confidence:</strong> {{ "%.4f"|format(result.coordinate.system_confidence) }}</p>
+    <p><strong>Escalation Factor:</strong> {{ "%.4f"|format(result.coordinate.escalation_factor) }}</p>
 
     <p><strong>Conflict Level:</strong>
-        {% if result.conflict_level == "HIGH" %}
+        {% if result.coordinate.conflict_level == "HIGH" %}
             <span class="critical">HIGH</span>
-        {% elif result.conflict_level == "MODERATE" %}
+        {% elif result.coordinate.conflict_level == "MODERATE" %}
             <span class="medium">MODERATE</span>
         {% else %}
             <span class="low">LOW</span>
         {% endif %}
     </p>
+
+    <button id="explainCoordinateBtn" class="explain-btn">Generate AI Coordination Explanation</button>
+
+    <div id="coordinate_explanations"></div>
 </div>
 
 <div class="box">
     <h2>Threat Intelligence Summary</h2>
     <p><strong>Dominant Threat:</strong>
-        {% if result.dominant_threat == "RANSOMWARE" %}
+        {% if result.coordinate.dominant_threat == "RANSOMWARE" %}
             <span class="critical">RANSOMWARE</span>
         {% else %}
             <span class="high">DATA EXFILTRATION</span>
@@ -56,11 +80,11 @@
     </p>
 
     <p><strong>Threat Stage:</strong>
-        {% if result.threat_stage == "CRITICAL COMPROMISE" %}
+        {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
             <span class="critical">CRITICAL COMPROMISE</span>
-        {% elif result.threat_stage == "ACTIVE ATTACK" %}
+        {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
             <span class="high">ACTIVE ATTACK</span>
-        {% elif result.threat_stage == "SUSPICIOUS ACTIVITY" %}
+        {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
             <span class="medium">SUSPICIOUS ACTIVITY</span>
         {% else %}
             <span class="low">LOW RISK</span>
@@ -77,27 +101,27 @@
         </tr>
         <tr>
             <td>Threat Score</td>
-            <td>{{ "%.4f"|format(result.structured_profile.threat_score) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.threat_score) }}</td>
         </tr>
         <tr>
             <td>Impact Score</td>
-            <td>{{ "%.4f"|format(result.structured_profile.impact_score) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.impact_score) }}</td>
         </tr>
         <tr>
             <td>Privacy Score</td>
-            <td>{{ "%.4f"|format(result.structured_profile.privacy_score) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.privacy_score) }}</td>
         </tr>
         <tr>
             <td>Policy Score</td>
-            <td>{{ "%.4f"|format(result.structured_profile.policy_score) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.policy_score) }}</td>
         </tr>
         <tr>
             <td>Context Risk</td>
-            <td>{{ "%.4f"|format(result.structured_profile.context_risk) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.context_risk) }}</td>
         </tr>
         <tr>
             <td>Anomaly Probability</td>
-            <td>{{ "%.4f"|format(result.structured_profile.anomaly_probability) }}</td>
+            <td>{{ "%.4f"|format(result.coordinate.structured_profile.anomaly_probability) }}</td>
         </tr>
     </table>
 </div>
@@ -105,11 +129,11 @@
 <div class="box">
     <h2>Recommended SOC Action</h2>
 
-    {% if result.recommended_action == "EXECUTE_AUTOMATED_CONTAINMENT" %}
+    {% if result.coordinate.recommended_action == "EXECUTE_AUTOMATED_CONTAINMENT" %}
         <div class="action contain">
             EXECUTE AUTOMATED CONTAINMENT
         </div>
-    {% elif result.recommended_action == "ESCALATE_TO_HUMAN_ANALYST" %}
+    {% elif result.coordinate.recommended_action == "ESCALATE_TO_HUMAN_ANALYST" %}
         <div class="action escalate">
             ESCALATE TO HUMAN ANALYST
         </div>
@@ -131,6 +155,76 @@
 
 <a href="/authority">View Authority Decision</a>
 <a href="/results">⬅ Back to Dashboard</a>
+
+<script>
+/* Safely load backend results */
+var coordinateResultStr = '{{ result|tojson|safe }}';
+var coordinateResult = coordinateResultStr ? JSON.parse(coordinateResultStr) : {};
+
+const explainCoordinateBtn = document.getElementById("explainCoordinateBtn");
+
+if (explainCoordinateBtn) {
+    explainCoordinateBtn.addEventListener("click", async () => {
+        const div = document.getElementById("coordinate_explanations");
+
+        div.innerHTML = "<p>Generating AI coordination explanations...</p>";
+
+        try {
+            const response = await fetch("/coordinate-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    raw: coordinateResult.raw || {},
+                    detection: coordinateResult.detection || {},
+                    context: coordinateResult.context || {},
+                    policy: coordinateResult.policy || {},
+                    threat: coordinateResult.threat || {},
+                    impact: coordinateResult.impact || {},
+                    privacy: coordinateResult.privacy || {},
+                    risk: coordinateResult.risk || {},
+                    coordinate: coordinateResult.coordinate || {}
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.rows) {
+                let html = `
+                <h3>AI Coordination Explanation</h3>
+                <table class="explanation-table">
+                <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Explanation</th>
+                </tr>
+                `;
+
+                data.rows.forEach(row => {
+                    html += `
+                    <tr>
+                    <td>${row.metric}</td>
+                    <td>${row.value}</td>
+                    <td>${row.explanation}</td>
+                    </tr>
+                    `;
+                });
+
+                html += "</table>";
+                div.innerHTML = html;
+
+            } else {
+                div.innerHTML = "<p style='color:red;'>No coordination explanations returned</p>";
+            }
+
+        } catch (error) {
+            div.innerHTML = "<p style='color:red;'>Error contacting coordination explanation service</p>";
+        }
+
+    });
+}
+</script>
 
 </body>
 </html>
