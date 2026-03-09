@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI  # install via pip if you haven’t
 load_dotenv()
 
 llm = ChatOpenAI(
-    model="google/gemma-3n-e2b-it:free",
+    model="openai/gpt-oss-20b:free",
     temperature=0.7
 )
 

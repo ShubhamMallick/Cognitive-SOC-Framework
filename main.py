@@ -62,6 +62,12 @@ from Agents.outcome_feedback_agent import outcome_feedback_agent
 from Agents.reinforcement_learning_agent import adaptive_policy
 
 # =====================================================
+# IMPORT SIMPLE AUDIO ALERTS
+# =====================================================
+
+from Utilities.simple_audio_alerts import audio_alerts
+
+# =====================================================
 # FASTAPI INITIALIZATION
 # =====================================================
 
@@ -273,6 +279,16 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
 
     agent_results["outcome"] = outcome_result
 
+    # -------------------------------------------------
+    # 🎵 AUDIO ALERT: Pipeline Complete
+    # -------------------------------------------------
+
+    final_decision = authority_result["final_decision"]
+    confidence = authority_result.get("decision_confidence")
+
+    # Speak normal sentence about final result
+    audio_alerts.alert_pipeline_complete(final_decision, confidence)
+
 
 # =====================================================
 # ANALYZE ROUTE
@@ -298,6 +314,11 @@ async def analyze_device(data: DeviceData):
         )
 
         await run_agents_parallel(input_dict, detection_result, context_result)
+
+        # Store detection and context results for template access
+        agent_results["detection"] = detection_result
+        agent_results["context"] = context_result
+        agent_results["raw"] = input_dict
 
         return JSONResponse({
             "detection": detection_result,

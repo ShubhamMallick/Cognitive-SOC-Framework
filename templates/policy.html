@@ -1,141 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Policy Agent - Compliance Risk</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .box { border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .critical { color: red; font-weight: bold; }
-        .elevated { color: orange; font-weight: bold; }
-        .normal { color: green; font-weight: bold; }
-        a { display: inline-block; margin: 10px 10px 0 0; padding: 8px 12px; background: #007BFF; color: white; text-decoration: none; border-radius: 4px; }
-        a:hover { background: #0056b3; }
-        .explain-btn {
-            margin-top: 10px;
-            padding: 10px 16px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .explain-btn:hover { background: #1e7e34; }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-        th { background-color: #f2f2f2; }
-    </style>
+<meta charset="UTF-8">
+<title>Analysis Results - Uncertainty-Aware SOC Framework</title>
+
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1, h2, h3 { color: #333; }
+p { margin: 8px 0; }
+ul { list-style-type: none; padding: 0; }
+li { margin: 4px 0; }
+
+.nav-buttons { margin-top: 30px; }
+
+.btn {
+    display: inline-block;
+    margin: 8px 8px 0 0;
+    padding: 10px 18px;
+    background: #007BFF;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+}
+
+.btn:hover { background: #0056b3; }
+
+.agent-btn { background: #28a745; }
+
+.agent-btn:hover { background: #1e7e34; }
+
+.section-box {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.explain-btn {
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.explain-btn:hover { background: #1e7e34; }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+th { background-color: #f2f2f2; }
+</style>
 </head>
+
 <body>
 
-<h1>🛡 Security Policy & Compliance Agent</h1>
+<h1>Analysis Results</h1>
 
-{% if result %}
+{% if result is string %}
+<h2>Error</h2>
+<p style="color:red;"><strong>{{ result }}</strong></p>
 
-<div class="box">
-    <p><strong>Policy Risk Score:</strong> {{ "%.4f"|format(result.policy.policy_risk_score) }}</p>
+{% elif result and ('detection' in result) and ('context' in result) %}
 
-    <p><strong>Policy Level:</strong>
-        {% if result.policy.policy_level == "CRITICAL" %}
-            <span class="critical">CRITICAL</span>
-        {% elif result.policy.policy_level == "ELEVATED" %}
-            <span class="elevated">ELEVATED</span>
-        {% else %}
-            <span class="normal">NORMAL</span>
-        {% endif %}
-    </p>
+<div class="section-box">
 
-    <p><strong>Mandatory Action Required:</strong>
-        {% if result.policy.mandatory_action %}
-            <span class="critical">YES</span>
-        {% else %}
-            No
-        {% endif %}
-    </p>
+<h2>Detection Results</h2>
 
-    <button id="explainPolicyBtn" class="explain-btn">Generate AI Policy Explanation</button>
+<p><strong>Anomaly Probability:</strong> {{ "%.4f"|format(result.detection.anomaly_probability) }}</p>
+<p><strong>Deviation Score:</strong> {{ "%.4f"|format(result.detection.deviation_score) }}</p>
+<p><strong>Uncertainty Score:</strong> {{ "%.4f"|format(result.detection.uncertainty_score) }}</p>
+<p><strong>Decision:</strong> {{ result.detection.decision }}</p>
 
-    <div id="policy_explanations"></div>
+<h3>Top Features</h3>
+
+<ul>
+{% for key, value in result.detection.top_features.items() %}
+<li><strong>{{ key }}:</strong> {{ "%.4f"|format(value) }}</li>
+{% endfor %}
+</ul>
+
+</div>
+
+
+<div class="section-box">
+
+<h2>Context Framing Results</h2>
+
+<p><strong>Base Risk:</strong> {{ "%.4f"|format(result.context.base_risk) }}</p>
+<p><strong>Asset Modifier:</strong> {{ result.context.asset_modifier }}</p>
+<p><strong>Network Modifier:</strong> {{ result.context.network_modifier }}</p>
+<p><strong>Security Modifier:</strong> {{ result.context.security_modifier }}</p>
+<p><strong>Final Contextual Risk:</strong> {{ "%.4f"|format(result.context.final_contextual_risk) }}</p>
+<p><strong>Risk Band:</strong> {{ result.context.risk_band }}</p>
+<p><strong>Confidence Band:</strong> {{ result.context.confidence_band }}</p>
+
+<button id="explainBtn" class="explain-btn">
+Generate AI Context Explanation
+</button>
+
+<div id="explanations"></div>
+
+</div>
+
+
+<div class="nav-buttons">
+
+<h2>Agent Intelligence Modules</h2>
+
+<a class="btn agent-btn" href="/policy">Policy Agent</a>
+<a class="btn agent-btn" href="/threat">Threat Intelligence Agent</a>
+<a class="btn agent-btn" href="/impact">Impact & Propagation Agent</a>
+<a class="btn agent-btn" href="/privacy">Privacy & Regulatory Agent</a>
 
 </div>
 
 {% else %}
-<p>No policy results available.</p>
+
+<p>No results available. Please submit the analysis form first.</p>
+
 {% endif %}
 
-<a href="/risk">View Risk Analysis</a>
-<a href="/results">⬅ Back to Dashboard</a>
+
+<div class="nav-buttons">
+<a class="btn" href="/">Back to Form</a>
+</div>
+
 
 <script>
-/* Safely load backend results */
-var policyResultStr = '{{ result|tojson|safe }}';
-var policyResult = policyResultStr ? JSON.parse(policyResultStr) : {};
 
-const explainPolicyBtn = document.getElementById("explainPolicyBtn");
+/* Safely load backend result */
+const resultData = {{ result | default({}) | tojson | safe }};
 
-if (explainPolicyBtn) {
-    explainPolicyBtn.addEventListener("click", async () => {
-        const div = document.getElementById("policy_explanations");
+const explainBtn = document.getElementById("explainBtn");
 
-        div.innerHTML = "<p>Generating AI policy explanations...</p>";
+if (explainBtn){
 
-        try {
-            const response = await fetch("/policy-explain", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    raw: policyResult.raw || {},
-                    detection: policyResult.detection || {},
-                    context: policyResult.context || {},
-                    policy: policyResult.policy || {}
-                })
-            });
+explainBtn.addEventListener("click", async () => {
 
-            const data = await response.json();
+const div = document.getElementById("explanations");
 
-            if (data.rows) {
-                let html = `
-                <h3>AI Policy Explanation</h3>
-                <table>
-                <tr>
-                <th>Metric</th>
-                <th>Value</th>
-                <th>Explanation</th>
-                </tr>
-                `;
+div.innerHTML = "<p>Generating AI explanations...</p>";
 
-                data.rows.forEach(row => {
-                    html += `
-                    <tr>
-                    <td>${row.metric}</td>
-                    <td>${row.value}</td>
-                    <td>${row.explanation}</td>
-                    </tr>
-                    `;
-                });
+try{
 
-                html += "</table>";
-                div.innerHTML = html;
+const response = await fetch("/context-explain", {
 
-            } else {
-                div.innerHTML = "<p style='color:red;'>No policy explanations returned</p>";
-            }
+method: "POST",
 
-        } catch (error) {
-            div.innerHTML = "<p style='color:red;'>Error contacting policy explanation service</p>";
-        }
+headers: {
+"Content-Type": "application/json"
+},
 
-    });
+body: JSON.stringify({
+context: resultData.context,
+detection: resultData.detection,
+raw_features: resultData.raw_features || {}
+})
+
+});
+
+const data = await response.json();
+
+if(data.rows){
+
+let html = `
+<h3>AI Context Explanation</h3>
+<table>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Explanation</th>
+</tr>
+`;
+
+data.rows.forEach(row => {
+
+html += `
+<tr>
+<td>${row.metric}</td>
+<td>${row.value}</td>
+<td>${row.explanation}</td>
+</tr>
+`;
+
+});
+
+html += "</table>";
+
+div.innerHTML = html;
+
 }
+else{
+
+div.innerHTML = "<p style='color:red;'>No explanations returned</p>";
+
+}
+
+}catch(error){
+
+div.innerHTML = "<p style='color:red;'>Error contacting explanation service</p>";
+
+}
+
+});
+
+}
+
 </script>
 
 </body>

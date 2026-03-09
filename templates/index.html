@@ -1,85 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uncertainty-Aware SOC Framework</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        label { display: block; margin: 10px 0 5px; }
-        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: #007BFF; color: white; border: none; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        #results { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border: 1px solid #ddd; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Uncertainty-Aware SOC Framework</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+margin:20px;
+background:#0b0f1a;
+background-image:
+radial-gradient(circle at 20% 30%, rgba(0,255,255,0.08), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(0,140,255,0.08), transparent 40%);
+color:#d7e1ff;
+line-height:1.6;
+}
+
+/* TITLE */
+
+h1{
+color:#00eaff;
+text-align:center;
+margin-bottom:30px;
+font-size:2.6rem;
+text-shadow:0 0 15px rgba(0,255,255,0.6);
+}
+
+/* SECTION TITLES */
+
+h2{
+color:#00eaff;
+border-bottom:2px solid rgba(0,255,255,0.4);
+padding-bottom:10px;
+margin-top:30px;
+margin-bottom:20px;
+}
+
+/* LABELS */
+
+label{
+display:block !important;
+margin:10px 0 5px;
+font-weight:600;
+color:#9fb2ff !important;
+font-size:14px;
+text-transform:none;
+visibility:visible;
+}
+
+/* INPUT FIELDS */
+
+input,select{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border:1px solid rgba(255,255,255,0.1);
+border-radius:8px;
+font-size:14px;
+background:#11182b;
+color:#e6edff;
+transition:all .25s ease;
+}
+
+input:focus,select:focus{
+outline:none;
+border-color:#00eaff;
+box-shadow:0 0 8px rgba(0,255,255,0.5);
+}
+
+/* BUTTON */
+
+button{
+padding:12px 24px;
+background:linear-gradient(135deg,#00eaff,#0077ff);
+color:white;
+border:none;
+cursor:pointer;
+border-radius:6px;
+font-size:16px;
+font-weight:600;
+transition:all .25s ease;
+}
+
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 0 15px rgba(0,255,255,0.7);
+}
+
+/* RESULTS */
+
+#results{
+margin-top:20px;
+white-space:pre-wrap;
+background:#11182b;
+padding:20px;
+border-radius:10px;
+border:1px solid rgba(0,255,255,0.25);
+box-shadow:0 0 10px rgba(0,0,0,0.7);
+}
+
+/* FORM LAYOUT */
+
+.form-grid{
+display:grid;
+grid-template-columns:1fr;
+gap:20px;
+}
+
+.form-section{
+background:rgba(20,25,45,0.85);
+padding:20px;
+border-radius:10px;
+border:1px solid rgba(0,255,255,0.15);
+box-shadow:0 8px 20px rgba(0,0,0,0.6);
+}
+
+/* RANGE SLIDERS */
+
+input[type=range]{
+appearance:none;
+height:6px;
+background:#1c2747;
+border-radius:5px;
+}
+
+input[type=range]::-webkit-slider-thumb{
+appearance:none;
+height:16px;
+width:16px;
+border-radius:50%;
+background:#00eaff;
+cursor:pointer;
+box-shadow:0 0 10px #00eaff;
+}
+
+.range-container{
+display:flex;
+align-items:center;
+}
+
+.range-value{
+margin-left:10px;
+color:#00eaff;
+font-weight:600;
+}
+
+</style>
 </head>
+
 <body>
-    <h1>Uncertainty-Aware SOC Framework</h1>
-    <form id="analyzeForm">
-        <h2>Device Context</h2>
-        <label>Device ID: <input type="text" name="device_id" value="D493" required></label>
-        <label>Device Type: <select name="device_type" required><option value="mri">mri</option><option value="ct">ct</option><option value="ultrasound">ultrasound</option></select></label>
-        <label>Department: <select name="department" required><option value="ICU">ICU</option><option value="ER">ER</option><option value="Radiology">Radiology</option></select></label>
-        <label>Firmware Version: <select name="firmware_version" required><option value="v2.0">v2.0</option><option value="v1.0">v1.0</option><option value="v3.0">v3.0</option></select></label>
-        <label>Criticality Level (1-5): <input type="range" name="criticality_level" min="1" max="5" value="3" oninput="this.nextElementSibling.value = this.value"><output>3</output></label>
 
-        <h2>System Metrics</h2>
-        <label>CPU Usage % (0-100): <input type="range" name="cpu_usage_percent" min="0" max="100" value="40" oninput="this.nextElementSibling.value = this.value"><output>40</output></label>
-        <label>Memory Usage % (0-100): <input type="range" name="memory_usage_percent" min="0" max="100" value="50" oninput="this.nextElementSibling.value = this.value"><output>50</output></label>
-        <label>Disk Write MB/min (0-1500): <input type="range" name="disk_write_mb_per_min" min="0" max="1500" value="50" oninput="this.nextElementSibling.value = this.value"><output>50</output></label>
-        <label>Disk Read MB/min (0-300): <input type="range" name="disk_read_mb_per_min" min="0" max="300" value="80" oninput="this.nextElementSibling.value = this.value"><output>80</output></label>
-        <label>Process Spawn Count (0-100): <input type="range" name="process_spawn_count" min="0" max="100" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
+<h1>Uncertainty-Aware SOC Framework</h1>
 
-        <h2>File System Metrics</h2>
-        <label>File Rename Count (0-2000): <input type="range" name="file_rename_count" min="0" max="2000" value="5" oninput="this.nextElementSibling.value = this.value"><output>5</output></label>
-        <label>New File Creation Count (0-1000): <input type="range" name="new_file_creation_count" min="0" max="1000" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
-        <label>File Entropy Avg (0-8): <input type="range" name="file_entropy_avg" min="0" max="8" step="0.1" value="5.5" oninput="this.nextElementSibling.value = this.value"><output>5.5</output></label>
-        <label>Encrypted Extension Ratio (0-1): <input type="range" name="encrypted_extension_ratio" min="0" max="1" step="0.01" value="0.0" oninput="this.nextElementSibling.value = this.value"><output>0.0</output></label>
+<form id="analyzeForm" class="form-grid">
 
-        <h2>Network Metrics</h2>
-        <label>Outbound Traffic MB (0-1000): <input type="range" name="outbound_traffic_mb" min="0" max="1000" value="20" oninput="this.nextElementSibling.value = this.value"><output>20</output></label>
-        <label>Inbound Traffic MB (0-200): <input type="range" name="inbound_traffic_mb" min="0" max="200" value="40" oninput="this.nextElementSibling.value = this.value"><output>40</output></label>
-        <label>Unique External IPs (0-50): <input type="range" name="unique_external_ips" min="0" max="50" value="1" oninput="this.nextElementSibling.value = this.value"><output>1</output></label>
-        <label>DNS Request Count (0-200): <input type="range" name="dns_request_count" min="0" max="200" value="10" oninput="this.nextElementSibling.value = this.value"><output>10</output></label>
-        <label>Unusual Port Flag (0-1): <input type="range" name="unusual_port_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+<!-- DEVICE CONTEXT -->
 
-        <h2>Security Signals</h2>
-        <label>Privilege Escalation Flag (0-1): <input type="range" name="privilege_escalation_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
-        <label>Configuration Change Flag (0-1): <input type="range" name="configuration_change_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
-        <label>Antivirus Alert Flag (0-1): <input type="range" name="antivirus_alert_flag" min="0" max="1" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
-        <label>Failed Auth Attempts (0-20): <input type="range" name="failed_auth_attempts" min="0" max="20" value="0" oninput="this.nextElementSibling.value = this.value"><output>0</output></label>
+<section class="form-section">
+<h2><i class="fas fa-microchip"></i> Device Context</h2>
 
-        <button type="submit">Analyze Device</button>
-    </form>
-    <div id="results"></div>
+<label for="device_id">Device ID</label>
+<input type="text" id="device_id" name="device_id" value="D493" required>
 
-    <script>
-        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            // Convert to numbers where needed
-            for (let key in data) {
-                if (key !== 'device_id' && key !== 'device_type' && key !== 'department' && key !== 'firmware_version') {
-                    data[key] = parseFloat(data[key]);
-                }
-            }
-            try {
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (!response.ok) {
-                    throw new Error('Server error: ' + response.status);
-                }
-                const result = await response.json();
-                // Redirect to results page with data
-                window.location.href = `/results?data=${encodeURIComponent(JSON.stringify(result))}`;
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        });
-    </script>
+<label for="device_type">Device Type</label>
+<select id="device_type" name="device_type">
+<option value="mri">mri</option>
+<option value="ct">ct</option>
+<option value="ultrasound">ultrasound</option>
+</select>
+
+<label for="department">Department</label>
+<select id="department" name="department">
+<option value="ICU">ICU</option>
+<option value="ER">ER</option>
+<option value="Radiology">Radiology</option>
+</select>
+
+<label for="firmware_version">Firmware Version</label>
+<select id="firmware_version" name="firmware_version">
+<option value="v2.0">v2.0</option>
+<option value="v1.0">v1.0</option>
+<option value="v3.0">v3.0</option>
+</select>
+
+<label for="criticality_level">Criticality Level</label>
+<div class="range-container">
+<input type="range" id="criticality_level" name="criticality_level" min="1" max="5" value="3" oninput="updateRangeValue(this)">
+<span class="range-value">3</span>
+</div>
+
+<label for="enable_explanations">Enable Model Explanations</label>
+<input type="checkbox" id="enable_explanations" name="enable_explanations">
+
+<label for="explanation_type">Explanation Type</label>
+<select id="explanation_type" name="explanation_type">
+<option value="shap">SHAP Only</option>
+<option value="lime">LIME Only</option>
+<option value="both">SHAP + LIME</option>
+</select>
+
+</section>
+
+
+<!-- SYSTEM METRICS -->
+
+<section class="form-section">
+<h2><i class="fas fa-tachometer-alt"></i> System Metrics</h2>
+
+<label for="cpu_usage_percent">CPU Usage %</label>
+<div class="range-container">
+<input type="range" id="cpu_usage_percent" name="cpu_usage_percent" min="0" max="100" value="40" oninput="updateRangeValue(this)">
+<span class="range-value">40</span>
+</div>
+
+<label for="memory_usage_percent">Memory Usage %</label>
+<div class="range-container">
+<input type="range" id="memory_usage_percent" name="memory_usage_percent" min="0" max="100" value="50" oninput="updateRangeValue(this)">
+<span class="range-value">50</span>
+</div>
+
+<label for="disk_write_mb_per_min">Disk Write MB/min</label>
+<div class="range-container">
+<input type="range" id="disk_write_mb_per_min" name="disk_write_mb_per_min" min="0" max="1500" value="50" oninput="updateRangeValue(this)">
+<span class="range-value">50</span>
+</div>
+
+<label for="disk_read_mb_per_min">Disk Read MB/min</label>
+<div class="range-container">
+<input type="range" id="disk_read_mb_per_min" name="disk_read_mb_per_min" min="0" max="300" value="80" oninput="updateRangeValue(this)">
+<span class="range-value">80</span>
+</div>
+
+<label for="process_spawn_count">Process Spawn Count</label>
+<div class="range-container">
+<input type="range" id="process_spawn_count" name="process_spawn_count" min="0" max="100" value="10" oninput="updateRangeValue(this)">
+<span class="range-value">10</span>
+</div>
+
+</section>
+
+
+<!-- FILE SYSTEM METRICS -->
+
+<section class="form-section">
+<h2><i class="fas fa-file-alt"></i> File System Metrics</h2>
+
+<label for="file_rename_count">File Rename Count</label>
+<div class="range-container">
+<input type="range" id="file_rename_count" name="file_rename_count" min="0" max="2000" value="5" oninput="updateRangeValue(this)">
+<span class="range-value">5</span>
+</div>
+
+<label for="new_file_creation_count">New File Creation Count</label>
+<div class="range-container">
+<input type="range" id="new_file_creation_count" name="new_file_creation_count" min="0" max="1000" value="10" oninput="updateRangeValue(this)">
+<span class="range-value">10</span>
+</div>
+
+<label for="file_entropy_avg">File Entropy Avg</label>
+<div class="range-container">
+<input type="range" id="file_entropy_avg" name="file_entropy_avg" min="0" max="8" step="0.1" value="5.5" oninput="updateRangeValue(this)">
+<span class="range-value">5.5</span>
+</div>
+
+<label for="encrypted_extension_ratio">Encrypted Extension Ratio</label>
+<div class="range-container">
+<input type="range" id="encrypted_extension_ratio" name="encrypted_extension_ratio" min="0" max="1" step="0.01" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+</section>
+
+
+<!-- NETWORK METRICS -->
+
+<section class="form-section">
+<h2><i class="fas fa-network-wired"></i> Network Metrics</h2>
+
+<label for="outbound_traffic_mb">Outbound Traffic MB</label>
+<div class="range-container">
+<input type="range" id="outbound_traffic_mb" name="outbound_traffic_mb" min="0" max="1000" value="20" oninput="updateRangeValue(this)">
+<span class="range-value">20</span>
+</div>
+
+<label for="inbound_traffic_mb">Inbound Traffic MB</label>
+<div class="range-container">
+<input type="range" id="inbound_traffic_mb" name="inbound_traffic_mb" min="0" max="200" value="40" oninput="updateRangeValue(this)">
+<span class="range-value">40</span>
+</div>
+
+<label for="unique_external_ips">Unique External IPs</label>
+<div class="range-container">
+<input type="range" id="unique_external_ips" name="unique_external_ips" min="0" max="50" value="1" oninput="updateRangeValue(this)">
+<span class="range-value">1</span>
+</div>
+
+<label for="dns_request_count">DNS Request Count</label>
+<div class="range-container">
+<input type="range" id="dns_request_count" name="dns_request_count" min="0" max="200" value="10" oninput="updateRangeValue(this)">
+<span class="range-value">10</span>
+</div>
+
+<label for="unusual_port_flag">Unusual Port Flag</label>
+<div class="range-container">
+<input type="range" id="unusual_port_flag" name="unusual_port_flag" min="0" max="1" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+</section>
+
+
+<!-- SECURITY SIGNALS -->
+
+<section class="form-section">
+<h2><i class="fas fa-shield-alt"></i> Security Signals</h2>
+
+<label for="privilege_escalation_flag">Privilege Escalation Flag</label>
+<div class="range-container">
+<input type="range" id="privilege_escalation_flag" name="privilege_escalation_flag" min="0" max="1" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+<label for="configuration_change_flag">Configuration Change Flag</label>
+<div class="range-container">
+<input type="range" id="configuration_change_flag" name="configuration_change_flag" min="0" max="1" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+<label for="antivirus_alert_flag">Antivirus Alert Flag</label>
+<div class="range-container">
+<input type="range" id="antivirus_alert_flag" name="antivirus_alert_flag" min="0" max="1" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+<label for="failed_auth_attempts">Failed Auth Attempts</label>
+<div class="range-container">
+<input type="range" id="failed_auth_attempts" name="failed_auth_attempts" min="0" max="20" value="0" oninput="updateRangeValue(this)">
+<span class="range-value">0</span>
+</div>
+
+</section>
+
+
+<button type="submit">Analyze Device</button>
+
+</form>
+
+<div id="results"></div>
+
+<script>
+
+function updateRangeValue(slider){
+slider.nextElementSibling.textContent = slider.value;
+}
+
+document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+
+e.preventDefault();
+
+const formData = new FormData(e.target);
+const data = Object.fromEntries(formData);
+
+// Ensure checkbox values are included
+data.enable_explanations = document.getElementById('enable_explanations').checked;
+
+// Convert numeric values
+for (let key in data) {
+if (key !== 'device_id' && key !== 'device_type' && key !== 'department' && key !== 'firmware_version' && key !== 'enable_explanations' && key !== 'explanation_type') {
+data[key] = parseFloat(data[key]);
+}
+}
+
+try {
+
+const response = await fetch('/analyze',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify(data)
+});
+
+if(!response.ok){
+throw new Error('Server error: ' + response.status);
+}
+
+const result = await response.json();
+
+window.location.href = `/results?data=${encodeURIComponent(JSON.stringify(result))}`;
+
+}catch(error){
+
+alert('Error: ' + error.message);
+
+}
+
+});
+
+</script>
+
 </body>
 </html>
