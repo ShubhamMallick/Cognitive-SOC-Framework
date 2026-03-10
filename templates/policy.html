@@ -2,219 +2,374 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Analysis Results - Uncertainty-Aware SOC Framework</title>
+<title>Policy Agent Analysis - Uncertainty-Aware SOC Framework</title>
 
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-h1, h2, h3 { color: #333; }
-p { margin: 8px 0; }
-ul { list-style-type: none; padding: 0; }
-li { margin: 4px 0; }
-
-.nav-buttons { margin-top: 30px; }
-
-.btn {
-    display: inline-block;
-    margin: 8px 8px 0 0;
-    padding: 10px 18px;
-    background: #007BFF;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 20px; 
+    background: #0b0f1a;
+    background-image:
+    radial-gradient(circle at 20% 30%, rgba(0,255,255,0.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(0,140,255,0.08), transparent 40%);
+    color: #d7e1ff;
+    line-height: 1.6;
 }
 
-.btn:hover { background: #0056b3; }
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(20, 25, 45, 0.85);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid rgba(0,255,255,0.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
 
-.agent-btn { background: #28a745; }
+h1 { 
+    color: #00eaff; 
+    text-align: center; 
+    margin-bottom: 30px;
+    font-size: 2.6rem;
+    text-shadow: 0 0 15px rgba(0,255,255,0.6);
+}
 
-.agent-btn:hover { background: #1e7e34; }
-
-.section-box {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 8px;
+h2 { 
+    color: #00eaff; 
+    border-bottom: 2px solid rgba(0,255,255,0.4); 
+    padding-bottom: 10px; 
+    margin-top: 30px;
     margin-bottom: 20px;
 }
 
+h3 { 
+    color: #00eaff; 
+    margin-top: 25px;
+}
+
+.section-box {
+    background: rgba(20, 25, 45, 0.85);
+    padding: 20px; 
+    border-radius: 10px; 
+    margin-bottom: 25px;
+    border: 1px solid rgba(0,255,255,0.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,255,255,0.1);
+    transition: background-color 0.3s ease;
+}
+
+.metric-row:hover {
+    background-color: rgba(0,255,255,0.05);
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #9fb2ff;
+    flex: 1;
+}
+
+.metric-value {
+    font-weight: bold;
+    color: #00eaff;
+    margin-right: 20px;
+    min-width: 100px;
+    text-align: right;
+}
+
+.nav-buttons { 
+    margin-top: 30px; 
+    text-align: center;
+}
+
+.btn {
+    display: inline-block;
+    margin: 10px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #00eaff, #0077ff);
+    color: white; 
+    text-decoration: none; 
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.btn:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0,255,255,0.7);
+}
+
+.agent-btn { 
+    background: linear-gradient(135deg, #00eaff, #0077ff);
+}
+
+.agent-btn:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0,255,255,0.7);
+}
+
 .explain-btn {
-    margin-top: 10px;
-    padding: 10px 16px;
-    background: #28a745;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #00eaff, #0077ff);
     color: white;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.25s ease;
 }
 
-.explain-btn:hover { background: #1e7e34; }
+.explain-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0,255,255,0.7);
+}
 
-table {
-    border-collapse: collapse;
+.explanation-table {
     width: 100%;
-    margin-top: 15px;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #11182b;
+    border-radius: 10px;
+    border: 1px solid rgba(0,255,255,0.25);
+    box-shadow: 0 0 10px rgba(0,0,0,0.7);
 }
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
+.explanation-table th {
+    background: rgba(20, 25, 45, 0.85);
+    color: #00eaff;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0,255,255,0.4);
 }
 
-th { background-color: #f2f2f2; }
+.explanation-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,255,255,0.1);
+    vertical-align: top;
+    color: #e6edff;
+}
+
+.explanation-table tr:hover {
+    background-color: rgba(0,255,255,0.05);
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #00eaff;
+    font-style: italic;
+}
+
+.error {
+    color: #e74c3c;
+    text-align: center;
+    padding: 20px;
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    border-radius: 10px;
+}
+
+.highlight {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 5px solid #ffc107;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 5px;
+    color: #e6edff;
+}
+
+.risk-high { color: #e74c3c; font-weight: bold; }
+.risk-medium { color: #f39c12; font-weight: bold; }
+.risk-low { color: #27ae60; font-weight: bold; }
 </style>
 </head>
 
 <body>
 
-<h1>Analysis Results</h1>
+<div class="container">
+
+<h1>🛡️ Policy Agent Analysis</h1>
 
 {% if result is string %}
-<h2>Error</h2>
-<p style="color:red;"><strong>{{ result }}</strong></p>
-
-{% elif result and ('detection' in result) and ('context' in result) %}
-
-<div class="section-box">
-
-<h2>Detection Results</h2>
-
-<p><strong>Anomaly Probability:</strong> {{ "%.4f"|format(result.detection.anomaly_probability) }}</p>
-<p><strong>Deviation Score:</strong> {{ "%.4f"|format(result.detection.deviation_score) }}</p>
-<p><strong>Uncertainty Score:</strong> {{ "%.4f"|format(result.detection.uncertainty_score) }}</p>
-<p><strong>Decision:</strong> {{ result.detection.decision }}</p>
-
-<h3>Top Features</h3>
-
-<ul>
-{% for key, value in result.detection.top_features.items() %}
-<li><strong>{{ key }}:</strong> {{ "%.4f"|format(value) }}</li>
-{% endfor %}
-</ul>
-
+<div class="section-box error">
+    <h2>❌ Error</h2>
+    <p>{{ result }}</p>
 </div>
 
+{% elif result and ('policy' in result) %}
 
+<!-- Policy Analysis Section -->
 <div class="section-box">
-
-<h2>Context Framing Results</h2>
-
-<p><strong>Base Risk:</strong> {{ "%.4f"|format(result.context.base_risk) }}</p>
-<p><strong>Asset Modifier:</strong> {{ result.context.asset_modifier }}</p>
-<p><strong>Network Modifier:</strong> {{ result.context.network_modifier }}</p>
-<p><strong>Security Modifier:</strong> {{ result.context.security_modifier }}</p>
-<p><strong>Final Contextual Risk:</strong> {{ "%.4f"|format(result.context.final_contextual_risk) }}</p>
-<p><strong>Risk Band:</strong> {{ result.context.risk_band }}</p>
-<p><strong>Confidence Band:</strong> {{ result.context.confidence_band }}</p>
-
-<button id="explainBtn" class="explain-btn">
-Generate AI Context Explanation
-</button>
-
-<div id="explanations"></div>
-
+    <h2>📋 Policy Analysis</h2>
+    
+    <div class="metric-row">
+        <span class="metric-label">Policy Risk Score</span>
+        <span class="metric-value {% if result.policy.policy_risk_score > 0.7 %}risk-high{% elif result.policy.policy_risk_score > 0.4 %}risk-medium{% else %}risk-low{% endif %}">
+            {{ "%.4f"|format(result.policy.policy_risk_score) }}
+        </span>
+    </div>
+    
+    <div class="metric-row">
+        <span class="metric-label">Policy Level</span>
+        <span class="metric-value">{{ result.policy.policy_level or "N/A" }}</span>
+    </div>
+    
+    <div class="metric-row">
+        <span class="metric-label">Mandatory Action Required</span>
+        <span class="metric-value {% if result.policy.mandatory_action %}risk-high{% else %}risk-low{% endif %}">
+            {{ result.policy.mandatory_action and "YES" or "NO" }}
+        </span>
+    </div>
+    
+    <div class="metric-row">
+        <span class="metric-label">Compliance Status</span>
+        <span class="metric-value {% if result.policy.compliance_status == 'COMPLIANT' %}risk-low{% elif result.policy.compliance_status == 'WARNING' %}risk-medium{% else %}risk-high{% endif %}">
+            {{ result.policy.compliance_status or "N/A" }}
+        </span>
+    </div>
+    
+    <div class="metric-row">
+        <span class="metric-label">Recommended Actions</span>
+        <span class="metric-value">{{ result.policy.recommended_actions|length or 0 }} actions</span>
+    </div>
 </div>
 
-
-<div class="nav-buttons">
-
-<h2>Agent Intelligence Modules</h2>
-
-<a class="btn agent-btn" href="/policy">Policy Agent</a>
-<a class="btn agent-btn" href="/threat">Threat Intelligence Agent</a>
-<a class="btn agent-btn" href="/impact">Impact & Propagation Agent</a>
-<a class="btn agent-btn" href="/privacy">Privacy & Regulatory Agent</a>
-
+<!-- AI Explanations Section -->
+<div class="section-box">
+    <h2>🤖 AI Policy Explanations</h2>
+    <p style="text-align: center; color: #7f8c8d; font-style: italic;">
+        Understanding the reasoning behind policy recommendations
+    </p>
+    
+    <button id="explainBtn" class="explain-btn">
+        Generate AI Policy Explanations
+    </button>
+    
+    <div id="explanations"></div>
 </div>
 
 {% else %}
 
-<p>No results available. Please submit the analysis form first.</p>
+<div class="section-box error">
+    <h2>⚠️ No Analysis Data</h2>
+    <p>No policy analysis results available. Please submit the analysis form first.</p>
+</div>
 
 {% endif %}
 
-
+<!-- Navigation -->
 <div class="nav-buttons">
-<a class="btn" href="/">Back to Form</a>
+    <h2>🔗 Navigate to Other Agents</h2>
+    <a class="btn agent-btn" href="/threat">🎯 Threat Intelligence</a>
+    <a class="btn agent-btn" href="/impact">💥 Impact Analysis</a>
+    <a class="btn agent-btn" href="/privacy">🔒 Privacy Assessment</a>
+    <a class="btn agent-btn" href="/risk">⚠️ Risk Analysis</a>
+    <a class="btn agent-btn" href="/coordinate">🎛️ Coordination</a>
+    <a class="btn agent-btn" href="/authority">👑 Authority</a>
+    <a class="btn agent-btn" href="/execution">⚡ Execution</a>
+    <a class="btn agent-btn" href="/audit">📋 Audit Trail</a>
+    <a class="btn" href="/">🏠 Back to Form</a>
 </div>
 
+</div>
 
 <script>
-
 /* Safely load backend result */
 const resultData = {{ result | default({}) | tojson | safe }};
 
 const explainBtn = document.getElementById("explainBtn");
 
-if (explainBtn){
-
-explainBtn.addEventListener("click", async () => {
-
-const div = document.getElementById("explanations");
-
-div.innerHTML = "<p>Generating AI explanations...</p>";
-
-try{
-
-const response = await fetch("/context-explain", {
-
-method: "POST",
-
-headers: {
-"Content-Type": "application/json"
-},
-
-body: JSON.stringify({
-context: resultData.context,
-detection: resultData.detection,
-raw_features: resultData.raw_features || {}
-})
-
-});
-
-const data = await response.json();
-
-if(data.rows){
-
-let html = `
-<h3>AI Context Explanation</h3>
-<table>
-<tr>
-<th>Metric</th>
-<th>Value</th>
-<th>Explanation</th>
-</tr>
-`;
-
-data.rows.forEach(row => {
-
-html += `
-<tr>
-<td>${row.metric}</td>
-<td>${row.value}</td>
-<td>${row.explanation}</td>
-</tr>
-`;
-
-});
-
-html += "</table>";
-
-div.innerHTML = html;
-
-}
-else{
-
-div.innerHTML = "<p style='color:red;'>No explanations returned</p>";
-
-}
-
-}catch(error){
-
-div.innerHTML = "<p style='color:red;'>Error contacting explanation service</p>";
-
-}
-
-});
-
+if (explainBtn) {
+    
+    explainBtn.addEventListener("click", async () => {
+        
+        const div = document.getElementById("explanations");
+        
+        // Show loading state
+        div.innerHTML = '<div class="loading">🤖 Generating AI policy explanations...</div>';
+        
+        try {
+            
+            const response = await fetch("/policy-explain", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    policy: resultData.policy || {}
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.rows && data.rows.length > 0) {
+                
+                let html = `
+                    <h3>🧠 AI-Generated Policy Explanations</h3>
+                    <table class="explanation-table">
+                        <thead>
+                            <tr>
+                                <th>📊 Policy Metric</th>
+                                <th>📈 Value</th>
+                                <th>💡 AI Explanation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.rows.forEach(row => {
+                    
+                    const valueDisplay = row.value !== null && row.value !== undefined ? 
+                        (typeof row.value === 'boolean' ? (row.value ? 'Yes' : 'No') : row.value) : 
+                        'N/A';
+                    
+                    const riskClass = row.metric.toLowerCase().includes('risk') ? 
+                        (valueDisplay.toString().toLowerCase().includes('high') ? 'risk-high' : 
+                         valueDisplay.toString().toLowerCase().includes('medium') ? 'risk-medium' : 'risk-low') : '';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${row.metric}</strong></td>
+                            <td class="${riskClass}">${valueDisplay}</td>
+                            <td>${row.explanation}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                    <div class="highlight">
+                        <strong>💡 Key Insight:</strong> The AI analysis provides context-specific explanations for each policy metric, helping you understand the reasoning behind security recommendations and compliance requirements.
+                    </div>
+                `;
+                
+                div.innerHTML = html;
+                
+            } else {
+                
+                div.innerHTML = '<div class="error">⚠️ No policy explanations available at this time.</div>';
+                
+            }
+            
+        } catch (error) {
+            
+            console.error('Policy explanation error:', error);
+            div.innerHTML = '<div class="error">❌ Error generating policy explanations. Please try again.</div>';
+            
+        }
+        
+    });
+    
 }
 
 </script>

@@ -13,15 +13,12 @@ async def explain_policy(request: Request):
 
         data = await request.json()
 
-        raw = data.get("raw", {})
-        detection = data.get("detection", {})
-        context = data.get("context", {})
         policy_result = data.get("policy", {})
 
         explanations = generate_policy_explanations(
-            raw,
-            detection,
-            context,
+            {},
+            {},
+            {},
             policy_result
         )
 
