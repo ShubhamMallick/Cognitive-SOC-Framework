@@ -103,9 +103,57 @@
         }
 
         #impactChart, #propagationChart {
-            width: 320px !important;
-            height: 160px !important;
+            width: 100% !important;
+            height: 400px !important;
             max-width: 100%;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .content-section {
+            margin: 0;
+            flex: 1;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            padding: 20px;
+            align-items: stretch;
+        }
+        
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -115,34 +163,55 @@
 
 {% if result %}
 
+<!-- Side-by-Side Charts Section -->
+<div class="main-content">
+    <!-- Impact Score Section -->
+    <div class="content-section">
+        <div class="box">
+            <h3>💥 Impact Score</h3>
+            <canvas id="impactChart" width="600" height="400"></canvas>
+        </div>
+    </div>
+
+    <!-- Propagation Factors Section -->
+    <div class="content-section">
+        <div class="box">
+            <h3>📈 Propagation Factors</h3>
+            <canvas id="propagationChart" width="600" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Threat Metrics Section -->
 <div class="box">
-    <div style="margin-bottom: 20px;">
-    <h3>💥 Impact Score</h3>
-    <canvas id="impactChart" width="300" height="150"></canvas>
+    <h2>📊 Detailed Impact Metrics</h2>
+    <div class="metrics-grid">
+        <div class="metric-item">
+            <span class="metric-label">Impact Score</span>
+            <span class="metric-value {% if result.impact.impact_score > 0.7 %}high{% elif result.impact.impact_score > 0.4 %}medium{% else %}low{% endif %}">
+                {{ "%.4f"|format(result.impact.impact_score) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Propagation Factor</span>
+            <span class="metric-value {% if result.impact.propagation_factor > 0.7 %}high{% elif result.impact.propagation_factor > 0.4 %}medium{% else %}low{% endif %}">
+                {{ "%.4f"|format(result.impact.propagation_factor) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Severity Level</span>
+            <span class="metric-value {% if result.impact.severity == "CRITICAL" %}high{% elif result.impact.severity == "HIGH" %}medium{% else %}low{% endif %}">
+                {{ result.impact.severity }}
+            </span>
+        </div>
     </div>
+</div>
 
-    <div style="margin-bottom: 20px;">
-    <h3>📈 Propagation Factors</h3>
-    <canvas id="propagationChart" width="300" height="150"></canvas>
-    </div>
-
-    <p><strong>Impact Score:</strong> {{ "%.4f"|format(result.impact.impact_score) }}</p>
-    <p><strong>Propagation Factor:</strong> {{ "%.4f"|format(result.impact.propagation_factor) }}</p>
-
-    <p><strong>Severity Level:</strong>
-        {% if result.impact.severity == "CRITICAL" %}
-            <span class="critical">CRITICAL</span>
-        {% elif result.impact.severity == "HIGH" %}
-            <span class="high">HIGH</span>
-        {% else %}
-            <span class="moderate">MODERATE</span>
-        {% endif %}
-    </p>
-
+<!-- AI Explanation Section -->
+<div class="box">
+    <h2>🤖 AI Impact Intelligence</h2>
     <button id="explainImpactBtn" class="explain-btn">Generate AI Impact Explanation</button>
-
     <div id="impact_explanations"></div>
-
 </div>
 
 {% else %}
