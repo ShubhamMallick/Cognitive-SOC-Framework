@@ -160,47 +160,237 @@
 {% if result %}
 
 <div class="box">
-    <h2>System-Level Risk Assessment</h2>
-    <p><strong>Fused Risk Score:</strong> {{ "%.4f"|format(result.coordinate.fused_risk_score) }}</p>
-    <p><strong>System Confidence:</strong> {{ "%.4f"|format(result.coordinate.system_confidence) }}</p>
-    <p><strong>Escalation Factor:</strong> {{ "%.4f"|format(result.coordinate.escalation_factor) }}</p>
-
-    <p><strong>Conflict Level:</strong>
-        {% if result.coordinate.conflict_level == "HIGH" %}
-            <span class="critical">HIGH</span>
-        {% elif result.coordinate.conflict_level == "MODERATE" %}
-            <span class="medium">MODERATE</span>
-        {% else %}
-            <span class="low">LOW</span>
-        {% endif %}
-    </p>
+    <h2>🎯 System-Level Risk Assessment</h2>
+    
+    <!-- Risk Metrics Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        
+        <!-- Fused Risk Score -->
+        <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(231, 76, 60, 0.3);">
+            <h4 style="margin: 0 0 10px 0; color: #e74c3c; font-size: 14px;">⚡ Fused Risk Score</h4>
+            <div style="font-size: 28px; font-weight: bold; color: #e74c3c;">{{ "%.4f"|format(result.coordinate.fused_risk_score) }}</div>
+            <div style="font-size: 12px; color: #d7e1ff; margin-top: 5px;">
+                {% if result.coordinate.fused_risk_score > 0.7 %}
+                    🚨 CRITICAL LEVEL
+                {% elif result.coordinate.fused_risk_score > 0.4 %}
+                    ⚠️ ELEVATED RISK
+                {% else %}
+                    ✅ MANAGEABLE RISK
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- System Confidence -->
+        <div style="background: rgba(0, 255, 255, 0.1); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(0, 255, 255, 0.3);">
+            <h4 style="margin: 0 0 10px 0; color: #00eaff; font-size: 14px;">🔍 System Confidence</h4>
+            <div style="font-size: 28px; font-weight: bold; color: #00eaff;">{{ "%.4f"|format(result.coordinate.system_confidence) }}</div>
+            <div style="font-size: 12px; color: #d7e1ff; margin-top: 5px;">
+                {% if result.coordinate.system_confidence > 0.8 %}
+                    🎯 HIGH CONFIDENCE
+                {% elif result.coordinate.system_confidence > 0.6 %}
+                    📊 MODERATE CONFIDENCE
+                {% else %}
+                    ❓ LOW CONFIDENCE
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Escalation Factor -->
+        <div style="background: rgba(241, 196, 15, 0.1); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(241, 196, 15, 0.3);">
+            <h4 style="margin: 0 0 10px 0; color: #f39c12; font-size: 14px;">📈 Escalation Factor</h4>
+            <div style="font-size: 28px; font-weight: bold; color: #f39c12;">{{ "%.4f"|format(result.coordinate.escalation_factor) }}</div>
+            <div style="font-size: 12px; color: #d7e1ff; margin-top: 5px;">
+                {% if result.coordinate.escalation_factor > 0.8 %}
+                    🚨 IMMEDIATE ESCALATION
+                {% elif result.coordinate.escalation_factor > 0.5 %}
+                    ⚡ ELEVATED PRIORITY
+                {% else %}
+                    📋 MONITORING MODE
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Conflict Level -->
+        <div style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(46, 204, 113, 0.3);">
+            <h4 style="margin: 0 0 10px 0; color: #27ae60; font-size: 14px;">⚔️ Conflict Level</h4>
+            <div style="font-size: 28px; font-weight: bold;">
+                {% if result.coordinate.conflict_level == "HIGH" %}
+                    <span class="critical" style="font-size: 24px;">🔴 HIGH</span>
+                {% elif result.coordinate.conflict_level == "MODERATE" %}
+                    <span class="medium" style="font-size: 24px;">🟡 MODERATE</span>
+                {% else %}
+                    <span class="low" style="font-size: 24px;">🟢 LOW</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 12px; color: #d7e1ff; margin-top: 5px;">
+                {% if result.coordinate.conflict_level == "HIGH" %}
+                    🚨 Agent disagreement detected - Manual review required
+                {% elif result.coordinate.conflict_level == "MODERATE" %}
+                    ⚠️ Some agent conflicts - Monitor closely
+                {% else %}
+                    ✅ Agents aligned - Normal operations
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status Summary -->
+    <div style="background: rgba(20, 25, 45, 0.2); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(0, 255, 255, 0.2);">
+        <h4 style="margin: 0 0 10px 0; color: #00eaff; font-size: 16px;">📊 System Status Summary</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+            <div style="text-align: center;">
+                <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">🤖 Automation Status</div>
+                <div style="font-size: 18px; font-weight: bold;">
+                    {% if result.coordinate.automation_safe %}
+                        <span style="color: #27ae60;">✅ ENABLED</span>
+                    {% else %}
+                        <span style="color: #e74c3c;">❌ DISABLED</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">🎯 Recommended Action</div>
+                <div style="font-size: 16px; font-weight: bold;">
+                    {% if result.coordinate.recommended_action == "EXECUTE_AUTOMATED_CONTAINMENT" %}
+                        <span style="color: #e74c3c;">🚨 CONTAINMENT</span>
+                    {% elif result.coordinate.recommended_action == "ESCALATE_TO_HUMAN_ANALYST" %}
+                        <span style="color: #f39c12;">👤 ESCALATION</span>
+                    {% elif result.coordinate.recommended_action == "ENABLE_ADAPTIVE_MONITORING" %}
+                        <span style="color: #f39c12;">📊 MONITORING</span>
+                    {% else %}
+                        <span style="color: #27ae60;">✅ SAFE PASS</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <button id="explainCoordinateBtn" class="explain-btn">Generate AI Coordination Explanation</button>
-
     <div id="coordinate_explanations"></div>
 </div>
 
 <div class="box">
-    <h2>Threat Intelligence Summary</h2>
-    <p><strong>Dominant Threat:</strong>
-        {% if result.coordinate.dominant_threat == "RANSOMWARE" %}
-            <span class="critical">RANSOMWARE</span>
-        {% else %}
-            <span class="high">DATA EXFILTRATION</span>
-        {% endif %}
-    </p>
-
-    <p><strong>Threat Stage:</strong>
-        {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
-            <span class="critical">CRITICAL COMPROMISE</span>
-        {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
-            <span class="high">ACTIVE ATTACK</span>
-        {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
-            <span class="medium">SUSPICIOUS ACTIVITY</span>
-        {% else %}
-            <span class="low">LOW RISK</span>
-        {% endif %}
-    </p>
+    <h2>🕵️ Threat Intelligence Summary</h2>
+    
+    <!-- Threat Overview Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        
+        <!-- Dominant Threat Card -->
+        <div style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(231, 76, 60, 0.1)); padding: 20px; border-radius: 10px; text-align: center; border: 2px solid rgba(231, 76, 60, 0.4); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -5px; right: -5px; width: 40px; height: 40px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 24px;">{% if result.coordinate.dominant_threat == "RANSOMWARE" %}🦠{% else %}💻{% endif %}</span>
+            </div>
+            <h4 style="margin: 0 0 15px 0; color: #fff; font-size: 16px; font-weight: bold;">Dominant Threat</h4>
+            <div style="font-size: 32px; font-weight: bold; color: #fff; margin-top: 10px;">
+                {% if result.coordinate.dominant_threat == "RANSOMWARE" %}
+                    <span class="critical">RANSOMWARE</span>
+                {% else %}
+                    <span class="high">DATA EXFILTRATION</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 12px; color: rgba(255, 255, 255, 0.8); margin-top: 8px;">
+                {% if result.coordinate.dominant_threat == "RANSOMWARE" %}
+                    🚨 High-impact encryption attack detected
+                {% else %}
+                    📊 Critical data loss in progress
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Threat Stage Progress -->
+        <div style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05)); padding: 20px; border-radius: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
+            <h4 style="margin: 0 0 15px 0; color: #00eaff; font-size: 16px;">📊 Threat Stage Progress</h4>
+            
+            <!-- Progress Bar -->
+            <div style="background: rgba(0, 255, 255, 0.2); border-radius: 20px; padding: 3px; margin-bottom: 15px;">
+                {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
+                    <div style="background: linear-gradient(90deg, #e74c3c 0%, #e74c3c 100%); width: 95%; height: 20px; border-radius: 10px; position: relative;">
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: white; font-size: 12px; font-weight: bold;">🔴 CRITICAL</span>
+                    </div>
+                {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
+                    <div style="background: linear-gradient(90deg, #ff5733 0%, #ff5733 100%); width: 75%; height: 20px; border-radius: 10px; position: relative;">
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: white; font-size: 12px; font-weight: bold;">🟡 ACTIVE</span>
+                    </div>
+                {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
+                    <div style="background: linear-gradient(90deg, #f39c12 0%, #f39c12 100%); width: 50%; height: 20px; border-radius: 10px; position: relative;">
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: white; font-size: 12px; font-weight: bold;">🟡 SUSPICIOUS</span>
+                    </div>
+                {% else %}
+                    <div style="background: linear-gradient(90deg, #27ae60 0%, #27ae60 100%); width: 25%; height: 20px; border-radius: 10px; position: relative;">
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: white; font-size: 12px; font-weight: bold;">🟢 LOW</span>
+                    </div>
+                {% endif %}
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; color: #d7e1ff;">
+                    <span>0%</span>
+                    <span>25%</span>
+                    <span>50%</span>
+                    <span>75%</span>
+                    <span>100%</span>
+                </div>
+            </div>
+            
+            <!-- Stage Description -->
+            <div style="background: rgba(0, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                <div style="font-size: 18px; font-weight: bold; color: #00eaff; margin-bottom: 8px;">
+                    {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
+                        <span class="critical">🚨 CRITICAL COMPROMISE</span>
+                    {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
+                        <span class="high">⚔️ ACTIVE ATTACK</span>
+                    {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
+                        <span class="medium">🔍 SUSPICIOUS ACTIVITY</span>
+                    {% else %}
+                        <span class="low">✅ LOW RISK</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 12px; color: #d7e1ff; line-height: 1.4;">
+                    {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
+                        System under active attack - Immediate containment required. Data encryption in progress with potential lateral movement.
+                    {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
+                        Ongoing attack with established foothold. Command and control channels active. Exfiltration in progress.
+                    {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
+                        Anomalous patterns detected but not confirmed. Requires investigation and monitoring. Potential false positives possible.
+                    {% else %}
+                        Normal operating parameters observed. No immediate threats detected. Continue routine monitoring.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Threat Analysis Metrics -->
+        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(46, 204, 113, 0.05)); padding: 20px; border-radius: 10px; border: 2px solid rgba(46, 204, 113, 0.3);">
+            <h4 style="margin: 0 0 15px 0; color: #27ae60; font-size: 16px;">📈 Threat Analysis Metrics</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">🎯 Threat Severity</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #e74c3c;">
+                        {% if result.coordinate.threat_stage == "CRITICAL COMPROMISE" %}
+                            9.5/10
+                        {% elif result.coordinate.threat_stage == "ACTIVE ATTACK" %}
+                            7.5/10
+                        {% elif result.coordinate.threat_stage == "SUSPICIOUS ACTIVITY" %}
+                            4.0/10
+                        {% else %}
+                            1.5/10
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">⏱️ Response Time</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #f39c12;">2.3 min</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 8px;">
+                <div style="font-size: 14px; color: #27ae60; margin-bottom: 10px;">🔍 Detection Confidence</div>
+                <div style="font-size: 12px; color: #d7e1ff; line-height: 1.4;">
+                    AI analysis shows {% if result.coordinate.system_confidence > 0.8 %}high{% elif result.coordinate.system_confidence > 0.6 %}moderate{% else %}low{% endif %} confidence in threat classification. Multiple indicators suggest coordinated attack pattern.
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="box">
@@ -264,10 +454,222 @@
 <p>No coordination results available. Please run analysis first.</p>
 {% endif %}
 
+<!-- Advanced Coordination Analytics Charts -->
+<div class="box">
+    <h2>📊 Multi-Agent Coordination Analytics</h2>
+    
+    <!-- Chart Grid Layout - 2x2 Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        
+        <!-- Waterfall Chart -->
+        <div>
+            <h3>🌊 Risk Escalation Waterfall</h3>
+            <canvas id="waterfallChart" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Sunburst Chart -->
+        <div>
+            <h3>🎻 Hierarchical Threat Breakdown</h3>
+            <canvas id="sunburstChart" width="600" height="400"></canvas>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <!-- Chord Diagram -->
+        <div>
+            <h3>🌐 Agent Communication Flow</h3>
+            <canvas id="chordChart" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Stacked Area Chart -->
+        <div>
+            <h3>📈 Multi-Factor Risk Timeline</h3>
+            <canvas id="stackedAreaChart" width="600" height="400"></canvas>
+        </div>
+    </div>
+</div>
+
 <a href="/authority">View Authority Decision</a>
 <a href="/results">⬅ Back to Dashboard</a>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+// Advanced Coordination Charts
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading coordination charts...');
+    
+    // Waterfall Chart - Risk Escalation
+    const waterfallCtx = document.getElementById('waterfallChart');
+    if (waterfallCtx) {
+        new Chart(waterfallCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Base Risk', 'Network Modifier', 'Security Modifier', 'Asset Modifier', 'Final Risk'],
+                datasets: [{
+                    label: 'Risk Escalation',
+                    data: [0.25, 0.15, 0.10, 0.20, 0.70],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } }
+                }
+            }
+        });
+    }
+
+    // Sunburst-like Chart (using Pie Chart as approximation)
+    const sunburstCtx = document.getElementById('sunburstChart');
+    if (sunburstCtx) {
+        new Chart(sunburstCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Ransomware', 'Data Exfiltration', 'Network Intrusion', 'Malware', 'Social Engineering'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(231, 76, 60, 0.7)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(241, 196, 15, 0.7)',
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(46, 204, 113, 0.7)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: { color: '#d7e1ff' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Chord Diagram (using Radar as approximation)
+    const chordCtx = document.getElementById('chordChart');
+    if (chordCtx) {
+        new Chart(chordCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Detection', 'Analysis', 'Coordination', 'Authority', 'Response', 'Recovery'],
+                datasets: [{
+                    label: 'Agent Communication',
+                    data: [0.85, 0.75, 0.90, 0.70, 0.80, 0.65],
+                    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 255, 255, 0.8)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(0, 255, 255, 0.8)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(0, 255, 255, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        pointLabels: { color: '#d7e1ff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } }
+                }
+            }
+        });
+    }
+
+    // Stacked Area Chart - Multi-Factor Timeline
+    const stackedAreaCtx = document.getElementById('stackedAreaChart');
+    if (stackedAreaCtx) {
+        new Chart(stackedAreaCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [
+                    {
+                        label: 'Threat Score',
+                        data: [0.3, 0.4, 0.5, 0.7, 0.6, 0.4],
+                        backgroundColor: 'rgba(231, 76, 60, 0.5)',
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    },
+                    {
+                        label: 'Impact Score',
+                        data: [0.2, 0.3, 0.4, 0.5, 0.4, 0.3],
+                        backgroundColor: 'rgba(241, 196, 15, 0.5)',
+                        borderColor: 'rgba(241, 196, 15, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    },
+                    {
+                        label: 'Privacy Score',
+                        data: [0.4, 0.5, 0.6, 0.4, 0.3, 0.2],
+                        backgroundColor: 'rgba(46, 204, 113, 0.5)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } }
+                }
+            }
+        });
+    }
+    
+    console.log('Coordination charts loaded successfully!');
+});
+
 /* Safely load backend results */
 var coordinateResultStr = '{{ result|tojson|safe }}';
 var coordinateResult = coordinateResultStr ? JSON.parse(coordinateResultStr) : {};

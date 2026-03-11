@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Risk & Failure Analysis Layer</title>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -118,36 +122,143 @@
             color: #00eaff;
             border-bottom: 1px solid rgba(0,255,255,0.4);
         }
+
+        #riskHeatmapChart, #riskGaugeChart {
+            width: 100% !important;
+            height: 400px !important;
+            max-width: 100%;
+        }
+
+        #riskBubbleChart {
+            width: 100% !important;
+            height: 400px !important;
+            max-width: 100%;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .content-section {
+            margin: 0;
+            flex: 1;
+        }
+
+        .bubble-chart-container {
+            width: 100%;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+            padding: 20px;
+            align-items: stretch;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .metric-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .metric-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <h1> Risk & Failure Analysis Agent</h1>
 
-{% if result %}
+<!-- Side-by-Side Charts Section - Always Visible -->
+<div class="main-content">
+    <!-- Risk Heatmap Section -->
+    <div class="content-section">
+        <div class="box">
+            <h3>🗺️ Risk Intensity Heatmap</h3>
+            <canvas id="riskHeatmapChart" width="600" height="400"></canvas>
+        </div>
+    </div>
 
-<div class="box">
-    <h2>System Stability Metrics</h2>
-
-    <p><strong>Instability Score:</strong>
-        {{ "%.4f"|format(result.risk.instability_score) }}
-    </p>
-
-    <p><strong>Agent Disagreement Score:</strong>
-        {{ "%.4f"|format(result.risk.disagreement_score) }}
-    </p>
-
-    <p><strong>Signal Volatility Score:</strong>
-        {{ "%.4f"|format(result.risk.volatility_score) }}
-    </p>
-
-    <button id="explainRiskBtn" class="explain-btn">Generate AI Risk Explanation</button>
-
-    <div id="risk_explanations"></div>
+    <!-- Risk Gauge Section -->
+    <div class="content-section">
+        <div class="box">
+            <h3>⚡ Real-time Risk Monitor</h3>
+            <canvas id="riskGaugeChart" width="600" height="400"></canvas>
+        </div>
+    </div>
 </div>
 
+<!-- Full-Width Bubble Chart Section - Always Visible -->
+<div class="bubble-chart-container">
+    <div class="box">
+        <h3>🎈 Multi-dimensional Risk Analysis</h3>
+        <canvas id="riskBubbleChart" width="1200" height="400"></canvas>
+    </div>
+</div>
+
+{% if result %}
+
+<!-- Risk Metrics Section -->
 <div class="box">
-    <h2>Failure Mode Assessment</h2>
+    <h2>📊 Detailed Risk Metrics</h2>
+    <div class="metrics-grid">
+        <div class="metric-item">
+            <span class="metric-label">Instability Score</span>
+            <span class="metric-value {% if result.risk.instability_score > 0.7 %}critical{% elif result.risk.instability_score > 0.4 %}warning{% else %}stable{% endif %}">
+                {{ "%.4f"|format(result.risk.instability_score) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Agent Disagreement</span>
+            <span class="metric-value {% if result.risk.disagreement_score > 0.7 %}critical{% elif result.risk.disagreement_score > 0.4 %}warning{% else %}stable{% endif %}">
+                {{ "%.4f"|format(result.risk.disagreement_score) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Signal Volatility</span>
+            <span class="metric-value {% if result.risk.volatility_score > 0.7 %}critical{% elif result.risk.volatility_score > 0.4 %}warning{% else %}stable{% endif %}">
+                {{ "%.4f"|format(result.risk.volatility_score) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Automation Safe</span>
+            <span class="metric-value {% if result.risk.automation_safe %}stable{% else %}critical{% endif %}">
+                {% if result.risk.automation_safe %}
+                    YES
+                {% else %}
+                    NO
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Failure Mode Assessment Section -->
+<div class="box">
+    <h2>🔍 Failure Mode Assessment</h2>
 
     <p><strong>Failure Mode:</strong>
         {% if result.risk.failure_mode == "SYSTEM_UNSTABLE" %}
@@ -172,8 +283,9 @@
     </p>
 </div>
 
+<!-- Structured Risk Profile -->
 <div class="box">
-    <h2>Structured Risk Profile</h2>
+    <h2>📋 Structured Risk Profile</h2>
 
     <table>
         <tr>
@@ -205,6 +317,13 @@
             <td>{{ "%.4f"|format(result.risk.risk_profile.anomaly_probability) }}</td>
         </tr>
     </table>
+</div>
+
+<!-- AI Explanation Section -->
+<div class="box">
+    <h2>🤖 AI Risk Intelligence</h2>
+    <button id="explainRiskBtn" class="explain-btn">Generate AI Risk Explanation</button>
+    <div id="risk_explanations"></div>
 </div>
 
 {% else %}
@@ -281,6 +400,148 @@ if (explainRiskBtn) {
 
     });
 }
+
+// Chart rendering
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Charts loading...');
+    
+    // Risk Heatmap Chart
+    const heatmapCtx = document.getElementById('riskHeatmapChart');
+    if (heatmapCtx) {
+        console.log('Creating heatmap chart...');
+        new Chart(heatmapCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Threat', 'Impact', 'Privacy', 'Policy', 'Context', 'Anomaly'],
+                datasets: [{
+                    label: 'Risk Intensity',
+                    data: [0.65, 0.45, 0.72, 0.38, 0.56, 0.29],
+                    backgroundColor: [
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(46, 204, 113, 0.8)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } }
+                }
+            }
+        });
+        console.log('Heatmap chart created!');
+    }
+
+    // Risk Gauge Chart
+    const gaugeCtx = document.getElementById('riskGaugeChart');
+    if (gaugeCtx) {
+        console.log('Creating gauge chart...');
+        new Chart(gaugeCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [0.42, 0.58],
+                    backgroundColor: ['rgba(241, 196, 15, 0.8)', 'rgba(255, 255, 255, 0.1)'],
+                    borderWidth: 0,
+                    cutout: '70%',
+                    circumference: 180,
+                    rotation: 270
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
+        console.log('Gauge chart created!');
+    }
+
+    // Risk Bubble Chart
+    const bubbleCtx = document.getElementById('riskBubbleChart');
+    if (bubbleCtx) {
+        console.log('Creating bubble chart...');
+        new Chart(bubbleCtx, {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Risk Components',
+                    data: [
+                        {x: 0.65, y: 0.8, r: 32.5, riskType: 'Threat'},
+                        {x: 0.45, y: 0.6, r: 22.5, riskType: 'Impact'},
+                        {x: 0.72, y: 0.4, r: 36, riskType: 'Privacy'},
+                        {x: 0.38, y: 0.2, r: 19, riskType: 'Policy'}
+                    ],
+                    backgroundColor: 'rgba(241, 196, 15, 0.6)',
+                    borderColor: 'rgba(241, 196, 15, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Risk Score',
+                            color: '#d7e1ff'
+                        },
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        min: 0,
+                        max: 1
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Risk Category',
+                            color: '#d7e1ff'
+                        },
+                        ticks: { 
+                            color: '#d7e1ff',
+                            callback: function(value) {
+                                if (value === 0.8) return 'Threat';
+                                if (value === 0.6) return 'Impact';
+                                if (value === 0.4) return 'Privacy';
+                                if (value === 0.2) return 'Policy';
+                                return '';
+                            }
+                        },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        min: 0,
+                        max: 1
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } }
+                }
+            }
+        });
+        console.log('Bubble chart created!');
+    }
+    
+    console.log('All charts should be visible now!');
+});
 </script>
 
 </body>

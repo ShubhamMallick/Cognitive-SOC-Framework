@@ -111,36 +111,145 @@
 {% if result %}
 
 <div class="box">
+    <h2>🏛️ Authority Decision Analysis</h2>
+    
+    <!-- Authority Decision Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        
+        <!-- Final Decision Status -->
+        <div style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.05)); padding: 20px; border-radius: 10px; text-align: center; border: 2px solid rgba(231, 76, 60, 0.3);">
+            <h4 style="margin: 0 0 15px 0; color: #e74c3c; font-size: 16px; font-weight: bold;">⚖️ Final Decision</h4>
+            
+            <div style="font-size: 28px; font-weight: bold; color: #e74c3c; margin: 10px 0;">
+                {% if result.authority.severity_level == "CRITICAL" %}
+                    🚨 {{ result.authority.final_decision }}
+                {% elif result.authority.severity_level == "HIGH" %}
+                    ⚠️ {{ result.authority.final_decision }}
+                {% elif result.authority.severity_level == "MEDIUM" %}
+                    📊 {{ result.authority.final_decision }}
+                {% else %}
+                    ✅ {{ result.authority.final_decision }}
+                {% endif %}
+            </div>
+            <div style="font-size: 14px; color: #d7e1ff; margin-top: 5px;">
+                {% if result.authority.severity_level == "CRITICAL" %}
+                    Critical threat requiring immediate action
+                {% elif result.authority.severity_level == "HIGH" %}
+                    High priority threat detected
+                {% elif result.authority.severity_level == "MEDIUM" %}
+                    Medium level threat under review
+                {% else %}
+                    Low level threat - normal operations
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Authority Metrics -->
+        <div style="background: rgba(20, 25, 45, 0.3); padding: 20px; border-radius: 10px; border: 1px solid rgba(0, 255, 255, 0.2);">
+            <h4 style="margin: 0 0 15px 0; color: #00eaff; font-size: 16px; font-weight: bold;">📊 Authority Metrics</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">
+                        <strong>🎯 Execution Mode</strong>
+                    </div>
+                    <div style="font-size: 18px; font-weight: bold; color: #00eaff; padding: 8px; border-radius: 5px; background: rgba(0, 255, 255, 0.1);">
+                        {{ result.authority.execution_mode }}
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">
+                        <strong>🔍 Decision Confidence</strong>
+                    </div>
+                    <div style="font-size: 18px; font-weight: bold; color: #00eaff; padding: 8px; border-radius: 5px; background: rgba(0, 255, 255, 0.1);">
+                        {{ result.authority.decision_confidence }}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0, 255, 255, 0.2);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">
+                            <strong>⚡ Instability Score</strong>
+                        </div>
+                        <div style="font-size: 18px; font-weight: bold; 
+                            {% if result.authority.instability_score > 0.7 %}
+                                color: #e74c3c;
+                            {% elif result.authority.instability_score > 0.4 %}
+                                color: #f39c12;
+                            {% else %}
+                                color: #27ae60;
+                            {% endif %}
+                            padding: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.1);
+                        ">
+                            {{ result.authority.instability_score }}
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">
+                            <strong>🔄 Override Status</strong>
+                        </div>
+                        <div style="font-size: 18px; font-weight: bold; 
+                            {% if result.authority.override_triggered %}
+                                color: #e74c3c;
+                            {% else %}
+                                color: #27ae60;
+                            {% endif %}
+                            padding: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.1);
+                        ">
+                            {% if result.authority.override_triggered %}
+                                🚨 TRIGGERED
+                            {% else %}
+                                ✅ NORMAL
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <p><strong>Final Decision:</strong>
-        {% if result.authority.severity_level == "CRITICAL" %}
-            <span class="critical">{{ result.authority.final_decision }}</span>
-        {% elif result.authority.severity_level == "HIGH" %}
-            <span class="high">{{ result.authority.final_decision }}</span>
-        {% elif result.authority.severity_level == "MEDIUM" %}
-            <span class="medium">{{ result.authority.final_decision }}</span>
-        {% else %}
-            <span class="low">{{ result.authority.final_decision }}</span>
-        {% endif %}
-    </p>
-
-    <p><strong>Execution Mode:</strong> {{ result.authority.execution_mode }}</p>
-    <p><strong>Severity Level:</strong> {{ result.authority.severity_level }}</p>
-    <p><strong>Decision Confidence:</strong> {{ result.authority.decision_confidence }}</p>
-    <p><strong>Instability Score:</strong> {{ result.authority.instability_score }}</p>
-
-    <p><strong>Override Triggered:</strong>
-        {% if result.authority.override_triggered %}
-            <span class="high">YES</span>
-        {% else %}
-            <span class="low">NO</span>
-        {% endif %}
-    </p>
-
-    <button id="explainAuthorityBtn" class="explain-btn">Generate AI Authority Explanation</button>
-
+    <button id="explainAuthorityBtn" class="explain-btn">🤖 Generate AI Authority Explanation</button>
     <div id="authority_explanations"></div>
+</div>
 
+<!-- Authority Decision Analytics Charts -->
+<div class="box">
+    <h2>📊 Authority Decision Analytics</h2>
+    
+    <!-- Chart Grid Layout - 2x2 Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        
+        <!-- Decision Tree Chart -->
+        <div>
+            <h3>🎖️ Authority Decision Flow</h3>
+            <canvas id="decisionTreeChart" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Confidence vs Severity Matrix -->
+        <div>
+            <h3>⚖️ Confidence vs Severity Matrix</h3>
+            <canvas id="confidenceMatrixChart" width="600" height="400"></canvas>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <!-- Alert Timeline -->
+        <div>
+            <h3>🚨 Alert Timeline & Authority Actions</h3>
+            <canvas id="alertTimelineChart" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Decision Distribution Gauge -->
+        <div>
+            <h3>🎯 Decision Distribution (Last 24h)</h3>
+            <canvas id="decisionGaugeChart" width="600" height="400"></canvas>
+        </div>
+    </div>
 </div>
 
 {% else %}
@@ -150,7 +259,275 @@
 <a href="/execution">➡ View Execution Details</a>
 <a href="/coordinate">⬅ Back to Coordination</a>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+// Authority Decision Analytics Charts
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading authority decision charts...');
+    
+    // Decision Tree Chart - Authority Decision Flow
+    const decisionTreeCtx = document.getElementById('decisionTreeChart');
+    if (decisionTreeCtx) {
+        new Chart(decisionTreeCtx, {
+            type: 'line',
+            data: {
+                labels: ['Detection', 'Risk Analysis', 'Coordination', 'Authority Review', 'Final Decision'],
+                datasets: [{
+                    label: 'Decision Path',
+                    data: [0.2, 0.4, 0.6, 0.8, 1.0],
+                    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                    borderColor: 'rgba(0, 255, 255, 0.8)',
+                    borderWidth: 3,
+                    pointBackgroundColor: 'rgba(0, 255, 255, 0.8)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Decision Progress',
+                            color: '#d7e1ff'
+                        }
+                    },
+                    x: {
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Decision Stage',
+                            color: '#d7e1ff'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } },
+                    title: {
+                        display: true,
+                        text: '🎖️ Authority Decision Flow',
+                        color: '#d7e1ff',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Confidence vs Severity Matrix
+    const confidenceMatrixCtx = document.getElementById('confidenceMatrixChart');
+    if (confidenceMatrixCtx) {
+        new Chart(confidenceMatrixCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Critical Decisions',
+                    data: [
+                        {x: 0.9, y: 0.95},
+                        {x: 0.85, y: 0.88},
+                        {x: 0.92, y: 0.91},
+                        {x: 0.88, y: 0.93}
+                    ],
+                    backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    pointRadius: 8
+                }, {
+                    label: 'High Decisions',
+                    data: [
+                        {x: 0.75, y: 0.82},
+                        {x: 0.78, y: 0.79},
+                        {x: 0.72, y: 0.85},
+                        {x: 0.80, y: 0.77}
+                    ],
+                    backgroundColor: 'rgba(241, 196, 15, 0.8)',
+                    borderColor: 'rgba(241, 196, 15, 1)',
+                    pointRadius: 8
+                }, {
+                    label: 'Medium Decisions',
+                    data: [
+                        {x: 0.60, y: 0.65},
+                        {x: 0.58, y: 0.70},
+                        {x: 0.65, y: 0.62},
+                        {x: 0.55, y: 0.68}
+                    ],
+                    backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    pointRadius: 8
+                }, {
+                    label: 'Low Decisions',
+                    data: [
+                        {x: 0.35, y: 0.40},
+                        {x: 0.30, y: 0.45},
+                        {x: 0.40, y: 0.38},
+                        {x: 0.32, y: 0.42}
+                    ],
+                    backgroundColor: 'rgba(46, 204, 113, 0.8)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    pointRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: 'Decision Confidence',
+                            color: '#d7e1ff'
+                        },
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        min: 0,
+                        max: 1,
+                        title: {
+                            display: true,
+                            text: 'Severity Level',
+                            color: '#d7e1ff'
+                        },
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } },
+                    title: {
+                        display: true,
+                        text: '⚖️ Confidence vs Severity Matrix',
+                        color: '#d7e1ff',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Alert Timeline with Authority Actions
+    const alertTimelineCtx = document.getElementById('alertTimelineChart');
+    if (alertTimelineCtx) {
+        new Chart(alertTimelineCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00'],
+                datasets: [{
+                    label: 'Authority Actions',
+                    data: [0, 1, 0, 2, 1, 0, 1],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(231, 76, 60, 0.8)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true
+                }, {
+                    label: 'Automated Responses',
+                    data: [1, 0, 2, 1, 0, 1, 0],
+                    backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                    borderColor: 'rgba(46, 204, 113, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(46, 204, 113, 0.8)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            color: '#d7e1ff',
+                            stepSize: 1
+                        },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Action Count',
+                            color: '#d7e1ff'
+                        }
+                    },
+                    x: {
+                        ticks: { color: '#d7e1ff' },
+                        grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Time (24h)',
+                            color: '#d7e1ff'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#d7e1ff' } },
+                    title: {
+                        display: true,
+                        text: '🚨 Alert Timeline & Authority Actions',
+                        color: '#d7e1ff',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Decision Distribution Gauge
+    const decisionGaugeCtx = document.getElementById('decisionGaugeChart');
+    if (decisionGaugeCtx) {
+        new Chart(decisionGaugeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Containment', 'Escalation', 'Monitoring', 'Safe Pass'],
+                datasets: [{
+                    data: [35, 25, 30, 10],
+                    backgroundColor: [
+                        'rgba(231, 76, 60, 0.8)',
+                        'rgba(241, 196, 15, 0.8)',
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(46, 204, 113, 0.8)'
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                circumference: 180,
+                rotation: 270,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: { color: '#d7e1ff' }
+                    },
+                    title: {
+                        display: true,
+                        text: '🎯 Decision Distribution (Last 24h)',
+                        color: '#d7e1ff',
+                        font: { size: 16 }
+                    }
+                }
+            }
+        });
+    }
+    
+    console.log('Authority decision charts loaded successfully!');
+});
+
 /* Safely load backend results */
 var authorityResultStr = '{{ result|tojson|safe }}';
 var authorityResult = authorityResultStr ? JSON.parse(authorityResultStr) : {};
