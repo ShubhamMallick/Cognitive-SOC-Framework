@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SOC Dashboard - Real-time Security Operations Center</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #0b0f1a;
+            background-image:
+            radial-gradient(circle at 20% 30%, rgba(0,255,255,0.08), transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(0,140,255,0.08), transparent 40%);
+            color: #d7e1ff;
+            line-height: 1.6;
+        }
+        
+        .dashboard-header {
+            background: rgba(20, 25, 45, 0.95);
+            border: 1px solid rgba(0,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(20, 25, 45, 0.85);
+            border: 1px solid rgba(0,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,255,255,0.3);
+        }
+        
+        .metric-title {
+            font-size: 14px;
+            color: #00eaff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-subtitle {
+            font-size: 12px;
+            color: #a0b3d3;
+        }
+        
+        .critical { color: #e74c3c; }
+        .high { color: #f39c12; }
+        .medium { color: #3498db; }
+        .low { color: #27ae60; }
+        .healthy { color: #27ae60; }
+        .warning { color: #f39c12; }
+        .error { color: #e74c3c; }
+        
+        .chart-container {
+            background: rgba(20, 25, 45, 0.85);
+            border: 1px solid rgba(0,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-list {
+            background: rgba(20, 25, 45, 0.85);
+            border: 1px solid rgba(0,255,255,0.15);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .alert-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #00eaff;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .alert-critical { border-left-color: #e74c3c; }
+        .alert-high { border-left-color: #f39c12; }
+        
+        .nav-link {
+            display: inline-block;
+            margin: 10px 10px 0 0;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #00eaff, #0077ff);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        
+        .nav-link:hover {
+            background: linear-gradient(135deg, #0077ff, #0056b3);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0,255,255,0.7);
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.7);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-healthy { background: #27ae60; }
+        .status-warning { background: #f39c12; }
+        .status-critical { background: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>🛡️ SOC Dashboard - Real-time Security Operations Center</h1>
+        <p>Comprehensive Security Monitoring & Agent Performance</p>
+        <button class="refresh-btn" onclick="refreshDashboard()">🔄 Refresh Dashboard</button>
+    </div>
+
+    {% if dashboard_data %}
+    
+    <!-- Summary Metrics Grid -->
+    <div class="dashboard-grid">
+        <div class="metric-card">
+            <div class="metric-title">📊 Total Events</div>
+            <div class="metric-value">{{ dashboard_data.summary.total_events if dashboard_data.summary else 0 }}</div>
+            <div class="metric-subtitle">Last 24 hours</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-title">🚨 Critical Alerts</div>
+            <div class="metric-value critical">{{ dashboard_data.summary.critical_alerts if dashboard_data.summary else 0 }}</div>
+            <div class="metric-subtitle">Immediate attention required</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-title">⚠️ High Alerts</div>
+            <div class="metric-value high">{{ dashboard_data.summary.high_alerts if dashboard_data.summary else 0 }}</div>
+            <div class="metric-subtitle">Priority monitoring</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-title">📈 Average Risk Score</div>
+            <div class="metric-value {% if dashboard_data.summary and dashboard_data.summary.get('average_risk', 0) > 0.7 %}critical{% elif dashboard_data.summary and dashboard_data.summary.get('average_risk', 0) > 0.4 %}high{% else %}medium{% endif %}">
+                {{ "%.3f"|format(dashboard_data.summary.get('average_risk', 0) if dashboard_data.summary else 0) }}
+            </div>
+            <div class="metric-subtitle">System-wide risk level</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-title">🎯 System Confidence</div>
+            <div class="metric-value {% if dashboard_data.summary and dashboard_data.summary.get('average_confidence', 0) > 0.8 %}healthy{% elif dashboard_data.summary and dashboard_data.summary.get('average_confidence', 0) > 0.6 %}warning{% else %}error{% endif %}">
+                {{ "%.3f"|format(dashboard_data.summary.get('average_confidence', 0) if dashboard_data.summary else 0) }}
+            </div>
+            <div class="metric-subtitle">Detection confidence</div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-title">💚 System Health</div>
+            <div class="metric-value">
+                <span class="status-indicator status-{{ dashboard_data.system_health.status.lower() if dashboard_data.system_health else 'unknown' }}"></span>
+                {{ dashboard_data.system_health.status if dashboard_data.system_health else 'UNKNOWN' }}
+            </div>
+            <div class="metric-subtitle">{{ "%.1f"|format(dashboard_data.system_health.health_score if dashboard_data.system_health and dashboard_data.system_health.get('health_score') else 0) }}% healthy</div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="chart-grid">
+        <div class="chart-container">
+            <h3>📈 Threat Trends (24h)</h3>
+            <canvas id="threatTrendsChart" width="500" height="300"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>🎯 Decision Distribution</h3>
+            <canvas id="decisionChart" width="500" height="300"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>⚡ System Performance</h3>
+            <canvas id="performanceChart" width="500" height="300"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>🧠 Learning Progress</h3>
+            <canvas id="learningChart" width="500" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Alerts Section -->
+    <div class="alert-list">
+        <h3>🚨 Recent Security Alerts</h3>
+        {% if dashboard_data.recent_alerts %}
+            {% for alert in dashboard_data.recent_alerts %}
+                <div class="alert-item alert-{{ alert.severity.lower() if alert.get('severity') else 'low' }}">
+                    <strong>{{ alert.severity if alert.get('severity') else 'UNKNOWN' }}</strong> - {{ alert.decision if alert.get('decision') else 'NO DECISION' }}
+                    <br>
+                    <small>Device: {{ alert.device_id if alert.get('device_id') else 'UNKNOWN' }} | {{ alert.timestamp[:19] if alert.get('timestamp') else 'NO TIME' }}</small>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No recent alerts</p>
+        {% endif %}
+    </div>
+
+    {% else %}
+        <div class="metric-card">
+            <h3>Dashboard Loading...</h3>
+            <p>Initializing SOC dashboard components...</p>
+        </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="/" class="nav-link">🏠 Home</a>
+        <a href="/results" class="nav-link">📊 Results</a>
+        <a href="/policy" class="nav-link">📋 Policy</a>
+        <a href="/threat" class="nav-link">🔍 Threat</a>
+        <a href="/impact" class="nav-link">💥 Impact</a>
+        <a href="/privacy" class="nav-link">🔒 Privacy</a>
+        <a href="/risk" class="nav-link">⚠️ Risk</a>
+        <a href="/coordinate" class="nav-link">🎯 Coordinate</a>
+        <a href="/authority" class="nav-link">🏛 Authority</a>
+        <a href="/execution" class="nav-link">⚙️ Execution</a>
+        <a href="/audit" class="nav-link">🧾 Audit</a>
+        <a href="/outcome" class="nav-link">🏷 Outcome</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Dashboard data from backend
+        const dashboardData = {{ dashboard_data|tojson|safe }};
+        
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing dashboard charts...');
+            
+            if (dashboardData) {
+                initializeThreatTrendsChart();
+                initializeDecisionChart();
+                initializePerformanceChart();
+                initializeLearningChart();
+            }
+        });
+        
+        // Refresh dashboard function
+        async function refreshDashboard() {
+            try {
+                const response = await fetch('/dashboard');
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Dashboard refresh error:', error);
+            }
+        }
+        
+        // Threat Trends Chart
+        function initializeThreatTrendsChart() {
+            const ctx = document.getElementById('threatTrendsChart');
+            if (!ctx) return;
+            
+            const threats = dashboardData.threat_trends || {};
+            const labels = Object.keys(threats).map(hour => `${hour}:00`);
+            const threatData = Object.values(threats).map(t => t.threat_count || 0);
+            const riskData = Object.values(threats).map(t => t.average_risk || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Threat Count',
+                        data: threatData,
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }, {
+                        label: 'Average Risk',
+                        data: riskData,
+                        backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                        borderColor: 'rgba(241, 196, 15, 1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } },
+                        title: {
+                            display: true,
+                            text: '24-Hour Threat Activity',
+                            color: '#d7e1ff'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Decision Distribution Chart
+        function initializeDecisionChart() {
+            const ctx = document.getElementById('decisionChart');
+            if (!ctx) return;
+            
+            const distribution = dashboardData.decision_distribution || {};
+            const decisions = dashboardData.summary?.decision_distribution || {};
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(decisions),
+                    datasets: [{
+                        data: Object.values(decisions),
+                        backgroundColor: [
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(241, 196, 15, 0.8)',
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(46, 204, 113, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } },
+                        title: {
+                            display: true,
+                            text: 'Decision Types Distribution',
+                            color: '#d7e1ff'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Performance Chart
+        function initializePerformanceChart() {
+            const ctx = document.getElementById('performanceChart');
+            if (!ctx) return;
+            
+            const performance = dashboardData.agent_performance || {};
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Processing Time', 'Fused Risk', 'System Confidence'],
+                    datasets: [{
+                        label: 'Current Values',
+                        data: [
+                            performance.processing_time?.current || 0,
+                            performance.fused_risk?.current || 0,
+                            performance.system_confidence?.current || 0
+                        ],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(46, 204, 113, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } },
+                        title: {
+                            display: true,
+                            text: 'System Performance Metrics',
+                            color: '#d7e1ff'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Learning Progress Chart
+        function initializeLearningChart() {
+            const ctx = document.getElementById('learningChart');
+            if (!ctx) return;
+            
+            const learning = dashboardData.learning_progress || [];
+            const labels = learning.map((item, index) => `Event ${index + 1}`);
+            const rewards = learning.map(item => item.reward_signal || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Reward Signal',
+                        data: rewards,
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } },
+                        title: {
+                            display: true,
+                            text: 'Reinforcement Learning Progress',
+                            color: '#d7e1ff'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(refreshDashboard, 30000);
+    </script>
+</body>
+</html>

@@ -192,6 +192,7 @@
 
 <!-- Threat Metrics Section -->
 <div class="box">
+{% if result.threat and 'ransomware_probability' in result.threat %}
     <h2>📊 Detailed Threat Metrics</h2>
     <div class="metrics-grid">
         <div class="metric-item">
@@ -213,6 +214,10 @@
             </span>
         </div>
     </div>
+{% else %}
+    <h2>⚠️ No Threat Analysis Available</h2>
+    <p>Please run the analysis form first to generate threat intelligence data.</p>
+{% endif %}
 </div>
 
 <!-- AI Explanation Section -->
@@ -229,8 +234,8 @@
 </div>
 {% endif %}
 
+<a href="/dashboard">📊 Dashboard</a>
 <a href="/risk">View Risk Analysis</a>
-<a href="/results">⬅ Back to Dashboard</a>
 
 <script>
 /* Safely load backend results */

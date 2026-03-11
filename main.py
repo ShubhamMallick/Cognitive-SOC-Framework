@@ -8,6 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 import os
 import json
 import asyncio
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
@@ -289,6 +290,38 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
     # Speak normal sentence about final result
     audio_alerts.alert_pipeline_complete(final_decision, confidence)
 
+    # -------------------------------------------------
+    # 📊 DASHBOARD UPDATE: After Complete Pipeline
+    # -------------------------------------------------
+
+    # Feed complete processed data to dashboard backend (with proper error handling)
+    try:
+        from Dashboard.dashboard_backend import dashboard_backend
+        import asyncio
+        # Create complete event data for dashboard
+        dashboard_event = {
+            "timestamp": datetime.now().isoformat(),
+            "raw_data": raw_features,
+            "detection": detection_result,
+            "context": context_result,
+            "policy": agent_results.get("policy", {}),
+            "threat": agent_results.get("threat", {}),
+            "impact": agent_results.get("impact", {}),
+            "privacy": agent_results.get("privacy", {}),
+            "risk": agent_results.get("risk", {}),
+            "coordination": agent_results.get("coordination", {}),
+            "authority": agent_results.get("authority", {}),
+            "execution": agent_results.get("execution", {}),
+            "audit": agent_results.get("audit", {}),
+            "outcome": agent_results.get("outcome", {})
+        }
+        # Process complete event in dashboard (non-blocking)
+        asyncio.create_task(dashboard_backend.process_soc_event(dashboard_event))
+        print(f"📊 Dashboard updated with complete SOC pipeline results")
+    except Exception as e:
+        # Don't let dashboard errors break the main pipeline
+        print(f"Dashboard update error (non-critical): {e}")
+        pass  # Continue without dashboard if it fails
 
 # =====================================================
 # ANALYZE ROUTE
@@ -456,4 +489,14 @@ async def show_outcome(request: Request):
     return templates.TemplateResponse(
         "outcome.html",
         {"request": request, "result": agent_results.get("outcome")}
+    )
+
+@app.get("/dashboard")
+async def show_dashboard(request: Request):
+    # Get dashboard data from backend
+    from Dashboard.dashboard_backend import get_dashboard_summary
+    dashboard_data = await get_dashboard_summary()
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request, "dashboard_data": dashboard_data}
     )

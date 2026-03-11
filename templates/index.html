@@ -364,17 +364,34 @@ document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
 e.preventDefault();
 
 const formData = new FormData(e.target);
-const data = Object.fromEntries(formData);
+const allData = Object.fromEntries(formData);
 
-// Ensure checkbox values are included
-data.enable_explanations = document.getElementById('enable_explanations').checked;
-
-// Convert numeric values
-for (let key in data) {
-if (key !== 'device_id' && key !== 'device_type' && key !== 'department' && key !== 'firmware_version' && key !== 'enable_explanations' && key !== 'explanation_type') {
-data[key] = parseFloat(data[key]);
-}
-}
+// Only send fields that match DeviceData model
+const data = {
+    device_id: allData.device_id,
+    device_type: allData.device_type,
+    department: allData.department,
+    criticality_level: parseInt(allData.criticality_level),
+    firmware_version: allData.firmware_version,
+    cpu_usage_percent: parseFloat(allData.cpu_usage_percent),
+    memory_usage_percent: parseFloat(allData.memory_usage_percent),
+    disk_write_mb_per_min: parseFloat(allData.disk_write_mb_per_min),
+    disk_read_mb_per_min: parseFloat(allData.disk_read_mb_per_min),
+    process_spawn_count: parseInt(allData.process_spawn_count),
+    file_rename_count: parseInt(allData.file_rename_count),
+    new_file_creation_count: parseInt(allData.new_file_creation_count),
+    file_entropy_avg: parseFloat(allData.file_entropy_avg),
+    encrypted_extension_ratio: parseFloat(allData.encrypted_extension_ratio),
+    outbound_traffic_mb: parseFloat(allData.outbound_traffic_mb),
+    inbound_traffic_mb: parseFloat(allData.inbound_traffic_mb),
+    unique_external_ips: parseInt(allData.unique_external_ips),
+    dns_request_count: parseInt(allData.dns_request_count),
+    unusual_port_flag: parseInt(allData.unusual_port_flag),
+    privilege_escalation_flag: parseInt(allData.privilege_escalation_flag),
+    configuration_change_flag: parseInt(allData.configuration_change_flag),
+    antivirus_alert_flag: parseInt(allData.antivirus_alert_flag),
+    failed_auth_attempts: parseInt(allData.failed_auth_attempts)
+};
 
 try {
 

@@ -174,17 +174,16 @@
                         <div style="font-size: 14px; color: #d7e1ff; margin-bottom: 5px;">
                             <strong>⚡ Instability Score</strong>
                         </div>
-                        <div style="font-size: 18px; font-weight: bold; 
-                            {% if result.authority.instability_score > 0.7 %}
+                        <div style="font-size: 18px; font-weight: bold; padding: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.1);
+                            {% if result.authority and result.authority.get('instability_score', 0) > 0.7 %}
                                 color: #e74c3c;
-                            {% elif result.authority.instability_score > 0.4 %}
+                            {% elif result.authority and result.authority.get('instability_score', 0) > 0.4 %}
                                 color: #f39c12;
                             {% else %}
                                 color: #27ae60;
                             {% endif %}
-                            padding: 8px; border-radius: 5px; background: rgba(255, 255, 255, 0.1);
                         ">
-                            {{ result.authority.instability_score }}
+                            {{ result.authority.get('instability_score', 0) }}
                         </div>
                     </div>
                     
