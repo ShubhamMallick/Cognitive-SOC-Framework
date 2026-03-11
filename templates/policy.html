@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Policy Agent Analysis - Uncertainty-Aware SOC Framework</title>
 
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -190,6 +193,31 @@ h3 {
 .risk-high { color: #e74c3c; font-weight: bold; }
 .risk-medium { color: #f39c12; font-weight: bold; }
 .risk-low { color: #27ae60; font-weight: bold; }
+
+/* Chart Styling */
+.chart-container {
+    background: rgba(20, 25, 45, 0.85);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(0,255,255,0.15);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.chart-canvas {
+    max-width: 400px;
+    margin: 0 auto;
+    position: relative;
+    height: 400px;
+}
+
+.chart-title {
+    text-align: center;
+    color: #00eaff;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    font-weight: 600;
+}
 </style>
 </head>
 
@@ -243,6 +271,14 @@ h3 {
     </div>
 </div>
 
+<!-- Policy Compliance Chart -->
+<div class="chart-container">
+    <h3 class="chart-title">📊 Policy Compliance Dimensions</h3>
+    <div class="chart-canvas">
+        <canvas id="policyChart"></canvas>
+    </div>
+</div>
+
 <!-- AI Explanations Section -->
 <div class="section-box">
     <h2>🤖 AI Policy Explanations</h2>
@@ -268,15 +304,8 @@ h3 {
 
 <!-- Navigation -->
 <div class="nav-buttons">
-    <h2>🔗 Navigate to Other Agents</h2>
-    <a class="btn agent-btn" href="/threat">🎯 Threat Intelligence</a>
-    <a class="btn agent-btn" href="/impact">💥 Impact Analysis</a>
-    <a class="btn agent-btn" href="/privacy">🔒 Privacy Assessment</a>
+    <h2>🔗 Navigate to Risk Analysis</h2>
     <a class="btn agent-btn" href="/risk">⚠️ Risk Analysis</a>
-    <a class="btn agent-btn" href="/coordinate">🎛️ Coordination</a>
-    <a class="btn agent-btn" href="/authority">👑 Authority</a>
-    <a class="btn agent-btn" href="/execution">⚡ Execution</a>
-    <a class="btn agent-btn" href="/audit">📋 Audit Trail</a>
     <a class="btn" href="/">🏠 Back to Form</a>
 </div>
 
@@ -369,6 +398,115 @@ if (explainBtn) {
         }
         
     });
+
+}
+
+// Policy Compliance Polar Area Chart
+if (resultData && resultData.policy) {
+    
+    const policyCtx = document.getElementById('policyChart');
+    
+    if (policyCtx) {
+        
+        // Calculate chart data based on policy metrics
+        const riskScore = resultData.policy.policy_risk_score || 0;
+        const complianceScore = resultData.policy.compliance_status === 'COMPLIANT' ? 0.9 : 
+                               resultData.policy.compliance_status === 'WARNING' ? 0.6 : 0.3;
+        const actionUrgency = resultData.policy.mandatory_action ? 0.8 : 0.4;
+        const policyLevel = resultData.policy.policy_level === 'HIGH' ? 0.9 : 
+                          resultData.policy.policy_level === 'MEDIUM' ? 0.6 : 0.3;
+        const actionCount = Math.min((resultData.policy.recommended_actions?.length || 0) / 10, 1.0);
+        
+        new Chart(policyCtx, {
+            type: 'polarArea',
+            data: {
+                labels: [
+                    'Risk Assessment',
+                    'Compliance Status', 
+                    'Action Urgency',
+                    'Policy Level',
+                    'Action Complexity'
+                ],
+                datasets: [{
+                    label: 'Policy Compliance Analysis',
+                    data: [
+                        1 - riskScore,  // Invert risk (higher risk = lower compliance)
+                        complianceScore,
+                        1 - actionUrgency,  // Invert urgency (higher urgency = lower compliance)
+                        policyLevel,
+                        1 - actionCount  // Invert action count (more actions = lower compliance)
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',  // Risk - Red
+                        'rgba(54, 162, 235, 0.6)',   // Compliance - Blue
+                        'rgba(255, 206, 86, 0.6)',   // Urgency - Yellow
+                        'rgba(75, 192, 192, 0.6)',   // Policy Level - Teal
+                        'rgba(153, 102, 255, 0.6)'   // Complexity - Purple
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#d7e1ff',
+                            padding: 15,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const labels = ['Risk Level', 'Compliance', 'Action Urgency', 'Policy Level', 'Action Complexity'];
+                                const values = [
+                                    (1 - context.raw).toFixed(2),  // Risk (actual value)
+                                    context.raw.toFixed(2),        // Compliance
+                                    (1 - context.raw).toFixed(2),  // Urgency (actual value)
+                                    context.raw.toFixed(2),        // Policy Level
+                                    (1 - context.raw).toFixed(2)   // Complexity (actual value)
+                                ];
+                                return labels[context.dataIndex] + ': ' + values[context.dataIndex];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            color: '#d7e1ff',
+                            backdropColor: 'transparent',
+                            stepSize: 0.2
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 255, 0.1)'
+                        },
+                        pointLabels: {
+                            color: '#d7e1ff',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+    }
     
 }
 

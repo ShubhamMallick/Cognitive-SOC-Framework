@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Analysis Results - Uncertainty-Aware SOC Framework</title>
 
+<!-- Chart.js Library (Required for charts to work) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -18,6 +21,13 @@ body {
 
 h1, h2, h3 { 
     color: #00eaff; 
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 30px;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
 }
 
 p { 
@@ -195,6 +205,673 @@ th {
     border-radius: 5px;
     color: #e6edff;
 }
+
+.chart-section {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.chart-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.chart-card {
+    background: rgba(20, 25, 45, 0.85);
+    border: 1px solid rgba(0,255,255,0.15);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    padding: 0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    flex: 1;
+    min-width: 300px;
+    max-width: calc(50% - 10px);
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(0,255,255,0.3);
+}
+
+.chart-card h3 {
+    margin: 0;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #00eaff;
+    border-bottom: 1px solid rgba(0,255,255,0.1);
+    background: rgba(0,255,255,0.05);
+}
+
+.chart-card canvas {
+    display: block;
+    width: 100% !important;
+    height: 220px !important;
+    margin: 12px auto;
+    padding: 0;
+}
+
+#detectionChart, #riskChart, #overallChart, #confidenceChart {
+    width: 100% !important;
+    height: 220px !important;
+    max-width: 100%;
+}
+
+/* Detection Results Styling */
+.detection-metrics {
+    margin-bottom: 25px;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.metric-item:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #9fb2ff;
+    font-size: 0.9em;
+}
+
+.metric-value {
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.metric-value.high {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.metric-value.medium {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.metric-value.low {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+/* Detection Decision Styling */
+.detection-decision {
+    margin-bottom: 25px;
+}
+
+.decision-box {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 2px solid;
+    transition: all 0.3s ease;
+}
+
+.decision-box.anomaly-detected {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.5);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+}
+
+.decision-box.normal {
+    background: rgba(39, 174, 96, 0.1);
+    border-color: rgba(39, 174, 96, 0.5);
+    box-shadow: 0 0 15px rgba(39, 174, 96, 0.3);
+}
+
+.decision-icon {
+    font-size: 1.5em;
+    margin-right: 15px;
+}
+
+.decision-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d7e1ff;
+}
+
+/* Top Features Styling */
+.top-features {
+    margin-bottom: 20px;
+}
+
+.features-list {
+    margin-top: 15px;
+}
+
+.feature-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.feature-name {
+    font-weight: 600;
+    color: #9fb2ff;
+    font-size: 0.9em;
+}
+
+.feature-value {
+    font-weight: bold;
+    font-size: 1em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: right;
+    min-width: 80px;
+}
+
+.feature-value.high-impact {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.feature-value.medium-impact {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.feature-value.low-impact {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.feature-bar {
+    width: 100px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.feature-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+    transition: width 0.5s ease;
+    border-radius: 3px;
+}
+
+/* Context Framing Results Styling */
+.risk-assessment {
+    margin-bottom: 25px;
+}
+
+.risk-summary {
+    margin-top: 15px;
+}
+
+.risk-metric.primary {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(0, 255, 255, 0.05);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.risk-metric.primary:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 255, 255, 0.2);
+}
+
+.risk-label {
+    font-weight: 600;
+    color: #9fb2ff;
+    font-size: 1.1em;
+    min-width: 180px;
+}
+
+.risk-value {
+    font-weight: bold;
+    font-size: 1.4em;
+    padding: 8px 16px;
+    border-radius: 6px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.risk-value.critical {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+}
+
+.risk-value.high {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);
+}
+
+.risk-value.medium {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.2);
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+}
+
+.risk-value.low {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+    box-shadow: 0 0 15px rgba(39, 174, 96, 0.3);
+}
+
+.risk-indicator {
+    flex: 1;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.risk-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+    transition: width 0.8s ease;
+    border-radius: 5px;
+}
+
+.risk-bands {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.band-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.band-label {
+    font-weight: 600;
+    color: #9fb2ff;
+}
+
+.band-value {
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.band-value.critical-band {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.band-value.high-band {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.band-value.medium-band {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.2);
+}
+
+.band-value.low-band {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.band-value.high-confidence {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.band-value.medium-confidence {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.band-value.low-confidence {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+/* Context Modifiers Styling */
+.context-modifiers {
+    margin-bottom: 25px;
+}
+
+.modifiers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.modifier-item {
+    padding: 15px;
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.modifier-item:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+}
+
+.modifier-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.modifier-icon {
+    font-size: 1.2em;
+}
+
+.modifier-name {
+    font-weight: 600;
+    color: #9fb2ff;
+    font-size: 0.95em;
+}
+
+.modifier-value {
+    display: block;
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.modifier-value.high {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.modifier-value.medium {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.modifier-value.low {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.modifier-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.modifier-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+    transition: width 0.6s ease;
+    border-radius: 3px;
+}
+
+.modifier-fill.asset-modifier {
+    background: linear-gradient(90deg, #3498db, #2980b9);
+}
+
+.modifier-fill.network-modifier {
+    background: linear-gradient(90deg, #9b59b6, #8e44ad);
+}
+
+.modifier-fill.security-modifier {
+    background: linear-gradient(90deg, #e67e22, #d35400);
+}
+
+/* AI Explanation Section Styling */
+.ai-explanation-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+/* Agent Modules Styling */
+.agent-modules {
+    margin-top: 30px;
+}
+
+.agent-intro {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.agent-intro p {
+    font-size: 1.1em;
+    color: #9fb2ff;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.agent-card {
+    background: rgba(0, 255, 255, 0.05);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.agent-card:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+    border-color: rgba(0, 255, 255, 0.4);
+}
+
+.agent-icon {
+    font-size: 2.5em;
+    background: rgba(0, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    height: 80px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.agent-info {
+    flex: 1;
+}
+
+.agent-info h3 {
+    margin: 0 0 10px 0;
+    color: #00eaff;
+    font-size: 1.3em;
+}
+
+.agent-info p {
+    margin: 0 0 20px 0;
+    color: #9fb2ff;
+    line-height: 1.5;
+    font-size: 0.95em;
+}
+
+.agent-btn {
+    background: linear-gradient(135deg, #00eaff, #0077ff);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.agent-btn:hover {
+    background: linear-gradient(135deg, #0077ff, #0056b3);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+}
+
+/* Footer Styling */
+.page-footer {
+    background: rgba(20, 25, 45, 0.95);
+    border-top: 2px solid rgba(0, 255, 255, 0.3);
+    margin-top: 50px;
+    padding: 40px 0 20px 0;
+    backdrop-filter: blur(10px);
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-section h4 {
+    color: #00eaff;
+    margin: 0 0 15px 0;
+    font-size: 1.2em;
+}
+
+.footer-section p {
+    color: #9fb2ff;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.footer-links {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.footer-btn {
+    background: rgba(0, 255, 255, 0.1);
+    color: #00eaff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    font-size: 0.9em;
+}
+
+.footer-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+}
+
+.summary-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.stat-label {
+    color: #9fb2ff;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.stat-value {
+    color: #00eaff;
+    font-weight: bold;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.stat-value.high-risk {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.stat-value.medium-risk {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+}
+
+.stat-value.low-risk {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 255, 255, 0.1);
+    color: #9fb2ff;
+    font-size: 0.9em;
+}
 </style>
 </head>
 
@@ -208,55 +885,238 @@ th {
 
 {% elif result and ('detection' in result) and ('context' in result) %}
 
+<!-- Dedicated Chart Section -->
+<div class="chart-section">
+    <h2>📈 Data Visualizations</h2>
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>📊 Detection Scores Overview</h3>
+            <canvas id="detectionChart" width="300" height="150"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>🎯 Risk Components Breakdown</h3>
+            <canvas id="riskChart" width="300" height="150"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>📈 Overall Analysis Status</h3>
+            <canvas id="overallChart" width="300" height="150"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>🔒 Confidence & Reliability</h3>
+            <canvas id="confidenceChart" width="300" height="150"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Detection Results Section -->
 <div class="section-box">
 
-<h2>Detection Results</h2>
+<h2>🔍 Anomaly Detection Results</h2>
 
-<p><strong>Anomaly Probability:</strong> {{ "%.4f"|format(result.detection.anomaly_probability) }}</p>
-<p><strong>Deviation Score:</strong> {{ "%.4f"|format(result.detection.deviation_score) }}</p>
-<p><strong>Uncertainty Score:</strong> {{ "%.4f"|format(result.detection.uncertainty_score) }}</p>
-<p><strong>Decision:</strong> {{ result.detection.decision }}</p>
+<!-- Core Detection Metrics -->
+<div class="detection-metrics">
+    <h3>📊 Core Detection Metrics</h3>
+    <div class="metrics-grid">
+        <div class="metric-item">
+            <span class="metric-label">Anomaly Probability</span>
+            <span class="metric-value {{ 'high' if result.detection.anomaly_probability > 0.7 else 'medium' if result.detection.anomaly_probability > 0.4 else 'low' }}">
+                {{ "%.4f"|format(result.detection.anomaly_probability) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Deviation Score</span>
+            <span class="metric-value {{ 'high' if result.detection.deviation_score > 0.7 else 'medium' if result.detection.deviation_score > 0.4 else 'low' }}">
+                {{ "%.4f"|format(result.detection.deviation_score) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Uncertainty Score</span>
+            <span class="metric-value {{ 'high' if result.detection.uncertainty_score > 0.7 else 'medium' if result.detection.uncertainty_score > 0.4 else 'low' }}">
+                {{ "%.4f"|format(result.detection.uncertainty_score) }}
+            </span>
+        </div>
+    </div>
+</div>
 
-<h3>Top Features</h3>
+<!-- Detection Decision -->
+<div class="detection-decision">
+    <h3>⚖️ Detection Decision</h3>
+    <div class="decision-box {{ 'anomaly-detected' if result.detection.decision == 'Anomaly Detected' else 'normal' }}">
+        <span class="decision-icon">{{ '🚨' if result.detection.decision == 'Anomaly Detected' else '✅' }}</span>
+        <span class="decision-text">{{ result.detection.decision }}</span>
+    </div>
+</div>
 
-<ul>
-{% for key, value in result.detection.top_features.items() %}
-<li><strong>{{ key }}:</strong> {{ "%.4f"|format(value) }}</li>
-{% endfor %}
-</ul>
+<!-- Top Contributing Features -->
+<div class="top-features">
+    <h3>🎯 Top Contributing Features</h3>
+    <div class="features-list">
+        {% for key, value in result.detection.top_features.items() %}
+        <div class="feature-item">
+            <span class="feature-name">{{ key|replace('_', ' ')|title }}</span>
+            <span class="feature-value {{ 'high-impact' if value > 0.7 else 'medium-impact' if value > 0.4 else 'low-impact' }}">
+                {{ "%.4f"|format(value) }}
+            </span>
+            <div class="feature-bar">
+                <div class="feature-fill" style="width: {{ (value * 100)|round|int }}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 
 </div>
 
-
+<!-- Context Framing Results Section -->
 <div class="section-box">
 
-<h2>Context Framing Results</h2>
+<h2>🌐 Context Framing Results</h2>
 
-<p><strong>Base Risk:</strong> {{ "%.4f"|format(result.context.base_risk) }}</p>
-<p><strong>Asset Modifier:</strong> {{ result.context.asset_modifier }}</p>
-<p><strong>Network Modifier:</strong> {{ result.context.network_modifier }}</p>
-<p><strong>Security Modifier:</strong> {{ result.context.security_modifier }}</p>
-<p><strong>Final Contextual Risk:</strong> {{ "%.4f"|format(result.context.final_contextual_risk) }}</p>
-<p><strong>Risk Band:</strong> {{ result.context.risk_band }}</p>
-<p><strong>Confidence Band:</strong> {{ result.context.confidence_band }}</p>
+<!-- Risk Assessment Overview -->
+<div class="risk-assessment">
+    <h3>🎯 Risk Assessment Overview</h3>
+    <div class="risk-summary">
+        <div class="risk-metric primary">
+            <span class="risk-label">Final Contextual Risk</span>
+            <span class="risk-value {{ 'critical' if result.context.final_contextual_risk > 0.8 else 'high' if result.context.final_contextual_risk > 0.6 else 'medium' if result.context.final_contextual_risk > 0.4 else 'low' }}">
+                {{ "%.4f"|format(result.context.final_contextual_risk) }}
+            </span>
+            <div class="risk-indicator">
+                <div class="risk-fill" style="width: {{ (result.context.final_contextual_risk * 100)|round|int }}%"></div>
+            </div>
+        </div>
+        <div class="risk-bands">
+            <div class="band-item">
+                <span class="band-label">Risk Band</span>
+                <span class="band-value {{ 'critical-band' if 'Critical' in result.context.risk_band else 'high-band' if 'High' in result.context.risk_band else 'medium-band' if 'Medium' in result.context.risk_band else 'low-band' }}">
+                    {{ result.context.risk_band }}
+                </span>
+            </div>
+            <div class="band-item">
+                <span class="band-label">Confidence Band</span>
+                <span class="band-value {{ 'high-confidence' if 'High' in result.context.confidence_band else 'medium-confidence' if 'Medium' in result.context.confidence_band else 'low-confidence' }}">
+                    {{ result.context.confidence_band }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
 
-<button id="explainBtn" class="explain-btn">
-Generate AI Context Explanation
-</button>
+<!-- Context Modifiers -->
+<div class="context-modifiers">
+    <h3>⚙️ Context Modifiers</h3>
+    <div class="modifiers-grid">
+        <div class="modifier-item">
+            <div class="modifier-header">
+                <span class="modifier-icon">🏢</span>
+                <span class="modifier-name">Base Risk</span>
+            </div>
+            <span class="modifier-value {{ 'high' if result.context.base_risk > 0.7 else 'medium' if result.context.base_risk > 0.4 else 'low' }}">
+                {{ "%.4f"|format(result.context.base_risk) }}
+            </span>
+            <div class="modifier-bar">
+                <div class="modifier-fill" style="width: {{ (result.context.base_risk * 100)|round|int }}%"></div>
+            </div>
+        </div>
+        <div class="modifier-item">
+            <div class="modifier-header">
+                <span class="modifier-icon">💼</span>
+                <span class="modifier-name">Asset Modifier</span>
+            </div>
+            <span class="modifier-value {{ 'high' if result.context.asset_modifier >= 0.8 else 'medium' if result.context.asset_modifier >= 0.5 else 'low' }}">
+                {{ result.context.asset_modifier }}
+            </span>
+            <div class="modifier-bar">
+                {% set asset_width = 80 if result.context.asset_modifier >= 0.8 else 50 if result.context.asset_modifier >= 0.5 else 20 %}
+                <div class="modifier-fill asset-modifier" style="width: {{ asset_width }}%"></div>
+            </div>
+        </div>
+        <div class="modifier-item">
+            <div class="modifier-header">
+                <span class="modifier-icon">🌐</span>
+                <span class="modifier-name">Network Modifier</span>
+            </div>
+            <span class="modifier-value {{ 'high' if result.context.network_modifier >= 0.8 else 'medium' if result.context.network_modifier >= 0.5 else 'low' }}">
+                {{ result.context.network_modifier }}
+            </span>
+            <div class="modifier-bar">
+                {% set network_width = 80 if result.context.network_modifier >= 0.8 else 50 if result.context.network_modifier >= 0.5 else 20 %}
+                <div class="modifier-fill network-modifier" style="width: {{ network_width }}%"></div>
+            </div>
+        </div>
+        <div class="modifier-item">
+            <div class="modifier-header">
+                <span class="modifier-icon">🔒</span>
+                <span class="modifier-name">Security Modifier</span>
+            </div>
+            <span class="modifier-value {{ 'high' if result.context.security_modifier >= 0.8 else 'medium' if result.context.security_modifier >= 0.5 else 'low' }}">
+                {{ result.context.security_modifier }}
+            </span>
+            <div class="modifier-bar">
+                {% set security_width = 80 if result.context.security_modifier >= 0.8 else 50 if result.context.security_modifier >= 0.5 else 20 %}
+                <div class="modifier-fill security-modifier" style="width: {{ security_width }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div id="explanations"></div>
+<!-- AI Explanation Section -->
+<div class="ai-explanation-section">
+    <h3>🤖 AI Context Explanation</h3>
+    <button id="explainBtn" class="explain-btn">
+        Generate AI Context Explanation
+    </button>
+    <div id="explanations"></div>
+</div>
 
 </div>
 
+<!-- Agent Intelligence Modules -->
+<div class="section-box agent-modules">
 
-<div class="nav-buttons">
+<h2>🤖 Agent Intelligence Modules</h2>
 
-<h2>Agent Intelligence Modules</h2>
+<div class="agent-intro">
+    <p>Explore our specialized AI agents for comprehensive security analysis and threat intelligence.</p>
+</div>
 
-<a class="btn agent-btn" href="/policy">Policy Agent</a>
-<a class="btn agent-btn" href="/threat">Threat Intelligence Agent</a>
-<a class="btn agent-btn" href="/impact">Impact & Propagation Agent</a>
-<a class="btn agent-btn" href="/privacy">Privacy & Regulatory Agent</a>
+<div class="agents-grid">
+    <div class="agent-card">
+        <div class="agent-icon">📋</div>
+        <div class="agent-info">
+            <h3>Policy Agent</h3>
+            <p>Analyze security policies and compliance requirements</p>
+            <a class="btn agent-btn" href="/policy">Launch Agent</a>
+        </div>
+    </div>
+    
+    <div class="agent-card">
+        <div class="agent-icon">🔍</div>
+        <div class="agent-info">
+            <h3>Threat Intelligence Agent</h3>
+            <p>Gather and analyze threat intelligence data</p>
+            <a class="btn agent-btn" href="/threat">Launch Agent</a>
+        </div>
+    </div>
+    
+    <div class="agent-card">
+        <div class="agent-icon">💥</div>
+        <div class="agent-info">
+            <h3>Impact & Propagation Agent</h3>
+            <p>Assess potential impact and threat propagation</p>
+            <a class="btn agent-btn" href="/impact">Launch Agent</a>
+        </div>
+    </div>
+    
+    <div class="agent-card">
+        <div class="agent-icon">🔐</div>
+        <div class="agent-info">
+            <h3>Privacy & Regulatory Agent</h3>
+            <p>Ensure privacy compliance and regulatory adherence</p>
+            <a class="btn agent-btn" href="/privacy">Launch Agent</a>
+        </div>
+    </div>
+</div>
 
 </div>
 
@@ -266,15 +1126,12 @@ Generate AI Context Explanation
 
 {% endif %}
 
-
 <div class="nav-buttons">
 <a class="btn" href="/">Back to Form</a>
 </div>
 
-
 <script>
 
-/* Safely load backend result */
 const resultData = {{ result | default({}) | tojson | safe }};
 
 const explainBtn = document.getElementById("explainBtn");
@@ -352,7 +1209,285 @@ div.innerHTML = "<p style='color:red;'>Error contacting explanation service</p>"
 
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+
+if (resultData.detection) {
+
+const detectionCtx = document.getElementById('detectionChart');
+
+if (detectionCtx) {
+
+new Chart(detectionCtx, {
+type: 'bar',
+data: {
+labels: ['Anomaly Probability', 'Deviation Score', 'Uncertainty Score'],
+datasets: [{
+label: 'Detection Scores',
+data: [
+resultData.detection.anomaly_probability,
+resultData.detection.deviation_score,
+resultData.detection.uncertainty_score
+],
+backgroundColor: [
+'rgba(231, 76, 60, 0.8)',
+'rgba(241, 196, 15, 0.8)',
+'rgba(52, 152, 219, 0.8)'
+],
+borderColor: [
+'rgba(231, 76, 60, 1)',
+'rgba(241, 196, 15, 1)',
+'rgba(52, 152, 219, 1)'
+],
+borderWidth: 1,
+barThickness: 45
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+y: {
+beginAtZero: true,
+max: 1,
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+},
+x: {
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+}
+},
+plugins: {
+legend: { labels: { color: '#d7e1ff' } }
+}
+}
+});
+
+}
+}
+
+if (resultData.context) {
+
+const riskCtx = document.getElementById('riskChart');
+
+if (riskCtx) {
+
+new Chart(riskCtx, {
+type: 'doughnut',
+data: {
+labels: ['Base Risk', 'Asset Modifier', 'Network Modifier', 'Security Modifier'],
+datasets: [{
+data: [
+resultData.context.base_risk,
+resultData.context.asset_modifier,
+resultData.context.network_modifier,
+resultData.context.security_modifier
+],
+backgroundColor: [
+'rgba(0, 255, 255, 0.8)',
+'rgba(52, 152, 219, 0.8)',
+'rgba(155, 89, 182, 0.8)',
+'rgba(231, 76, 60, 0.8)'
+],
+borderColor: [
+'rgba(0, 255, 255, 1)',
+'rgba(52, 152, 219, 1)',
+'rgba(155, 89, 182, 1)',
+'rgba(231, 76, 60, 1)'
+],
+borderWidth: 2
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: { labels: { color: '#d7e1ff' } }
+}
+}
+});
+
+}
+
+}
+
+// Overall Analysis Status Chart
+if (resultData.detection && resultData.context) {
+
+const overallCtx = document.getElementById('overallChart');
+
+if (overallCtx) {
+
+// Calculate overall status
+const anomalyLevel = resultData.detection.anomaly_probability > 0.7 ? 'High' : 
+                    resultData.detection.anomaly_probability > 0.4 ? 'Medium' : 'Low';
+const riskLevel = resultData.context.final_contextual_risk > 0.7 ? 'High' : 
+                  resultData.context.final_contextual_risk > 0.4 ? 'Medium' : 'Low';
+const uncertaintyLevel = resultData.detection.uncertainty_score > 0.7 ? 'High' : 
+                        resultData.detection.uncertainty_score > 0.4 ? 'Medium' : 'Low';
+
+new Chart(overallCtx, {
+type: 'radar',
+data: {
+labels: ['Anomaly Level', 'Risk Level', 'Uncertainty Level', 'Confidence', 'Threat Score'],
+datasets: [{
+label: 'Overall Analysis Status',
+data: [
+resultData.detection.anomaly_probability,
+resultData.context.final_contextual_risk,
+resultData.detection.uncertainty_score,
+1 - resultData.detection.uncertainty_score,
+(resultData.detection.anomaly_probability + resultData.context.final_contextual_risk) / 2
+],
+backgroundColor: 'rgba(0, 255, 152, 0.2)',
+borderColor: 'rgba(0, 255, 255, 1)',
+borderWidth: 2,
+pointBackgroundColor: 'rgba(0, 255, 255, 1)',
+pointBorderColor: '#fff',
+pointHoverBackgroundColor: '#fff',
+pointHoverBorderColor: 'rgba(0, 255, 255, 1)'
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+r: {
+beginAtZero: true,
+max: 1,
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' },
+pointLabels: { color: '#d7e1ff' }
+}
+},
+plugins: {
+legend: { labels: { color: '#d7e1ff' } }
+}
+}
+});
+
+}
+
+}
+
+// Confidence & Reliability Chart
+if (resultData.detection && resultData.context) {
+
+const confidenceCtx = document.getElementById('confidenceChart');
+
+if (confidenceCtx) {
+
+// Calculate confidence and reliability metrics
+const confidence = 1 - resultData.detection.uncertainty_score;
+const reliability = Math.min(1 - resultData.detection.uncertainty_score + resultData.context.final_contextual_risk, 1);
+const stability = 1 - (resultData.detection.deviation_score * resultData.detection.uncertainty_score);
+const accuracy = 1 - resultData.detection.uncertainty_score;
+
+new Chart(confidenceCtx, {
+type: 'line',
+data: {
+labels: ['Confidence', 'Reliability', 'Stability', 'Accuracy'],
+datasets: [{
+label: 'Confidence Metrics',
+data: [confidence, reliability, stability, accuracy],
+backgroundColor: 'rgba(46, 204, 113, 0.2)',
+borderColor: 'rgba(46, 204, 113, 1)',
+borderWidth: 2,
+pointBackgroundColor: 'rgba(46, 204, 113, 1)',
+pointBorderColor: '#fff',
+pointHoverBackgroundColor: '#fff',
+pointHoverBorderColor: 'rgba(46, 204, 113, 1)',
+fill: true,
+tension: 0.4
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+y: {
+beginAtZero: true,
+max: 1,
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+},
+x: {
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+}
+},
+plugins: {
+legend: { labels: { color: '#d7e1ff' } }
+}
+}
+});
+
+}
+
+}
+
+// Fourth Confidence and Reliability Chart
+if (resultData.detection && resultData.context) {
+
+const fourthConfidenceCtx = document.getElementById('fourthConfidenceChart');
+
+if (fourthConfidenceCtx) {
+
+// Calculate confidence and reliability metrics
+const confidence = 1 - resultData.detection.uncertainty_score;
+const reliability = Math.min(1 - resultData.detection.uncertainty_score + resultData.context.final_contextual_risk, 1);
+const stability = 1 - (resultData.detection.deviation_score * resultData.detection.uncertainty_score);
+const accuracy = 1 - resultData.detection.uncertainty_score;
+
+new Chart(fourthConfidenceCtx, {
+type: 'line',
+data: {
+labels: ['Confidence', 'Reliability', 'Stability', 'Accuracy'],
+datasets: [{
+label: 'Confidence Metrics',
+data: [confidence, reliability, stability, accuracy],
+backgroundColor: 'rgba(46, 204, 113, 0.2)',
+borderColor: 'rgba(46, 204, 113, 1)',
+borderWidth: 2,
+pointBackgroundColor: 'rgba(46, 204, 113, 1)',
+pointBorderColor: '#fff',
+pointHoverBackgroundColor: '#fff',
+pointHoverBorderColor: 'rgba(46, 204, 113, 1)',
+fill: true,
+tension: 0.4
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+scales: {
+y: {
+beginAtZero: true,
+max: 1,
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+},
+x: {
+ticks: { color: '#d7e1ff', stepSize: 0.25, backdropColor: 'transparent' },
+grid: { color: 'rgba(0, 255, 255, 0.1)' }
+}
+},
+plugins: {
+legend: { labels: { color: '#d7e1ff' } }
+}
+}
+});
+
+}
+
+}
+
+});
+
 </script>
 
 </body>
 </html>
+
+
+

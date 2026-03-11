@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Threat Intelligence Agent</title>
+    <title>Threat Intelligence Agent - Uncertainty-Aware SOC Framework</title>
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -13,6 +16,7 @@
             radial-gradient(circle at 80% 70%, rgba(0,140,255,0.08), transparent 40%);
             color: #d7e1ff;
             line-height: 1.6;
+            text-align: center;
         }
         
         .box { 
@@ -97,6 +101,64 @@
             color: #00eaff;
             border-bottom: 1px solid rgba(0,255,255,0.4);
         }
+
+        #threatChart {
+            width: 100% !important;
+            height: 400px !important;
+        }
+        
+        #signalChart {
+            width: 100% !important;
+            height: 400px !important;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            padding: 20px;
+            align-items: stretch;
+        }
+        
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .content-section {
+            margin: 0;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -105,26 +167,66 @@
 
 {% if result %}
 
+<!-- Side-by-Side Charts Section -->
+<div class="main-content">
+    <!-- Threat Probabilities Section -->
+    <div class="content-section">
+        <div class="box">
+            <h2>🎯 Threat Probabilities Analysis</h2>
+            <div class="chart-container">
+                <canvas id="threatChart" width="600" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threat Signals Section -->
+    <div class="content-section">
+        <div class="box">
+            <h2>📡 Threat Signals Analysis</h2>
+            <div class="chart-container">
+                <canvas id="signalChart" width="600" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Threat Metrics Section -->
 <div class="box">
-    <p><strong>Ransomware Probability:</strong> {{ "%.4f"|format(result.threat.ransomware_probability) }}</p>
-    <p><strong>Data Exfiltration Probability:</strong> {{ "%.4f"|format(result.threat.exfiltration_probability) }}</p>
+    <h2>📊 Detailed Threat Metrics</h2>
+    <div class="metrics-grid">
+        <div class="metric-item">
+            <span class="metric-label">Ransomware Probability</span>
+            <span class="metric-value {% if result.threat.ransomware_probability > 0.7 %}high{% elif result.threat.ransomware_probability > 0.4 %}medium{% else %}low{% endif %}">
+                {{ "%.4f"|format(result.threat.ransomware_probability) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Data Exfiltration Probability</span>
+            <span class="metric-value {% if result.threat.exfiltration_probability > 0.7 %}high{% elif result.threat.exfiltration_probability > 0.4 %}medium{% else %}low{% endif %}">
+                {{ "%.4f"|format(result.threat.exfiltration_probability) }}
+            </span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Dominant Threat</span>
+            <span class="metric-value {% if result.threat.dominant_threat == "RANSOMWARE" %}high{% else %}medium{% endif %}">
+                {{ result.threat.dominant_threat }}
+            </span>
+        </div>
+    </div>
+</div>
 
-    <p><strong>Dominant Threat:</strong>
-        {% if result.threat.dominant_threat == "RANSOMWARE" %}
-            <span class="high">RANSOMWARE</span>
-        {% else %}
-            <span class="medium">DATA EXFILTRATION</span>
-        {% endif %}
-    </p>
-
+<!-- AI Explanation Section -->
+<div class="box">
+    <h2>🤖 AI Threat Intelligence</h2>
     <button id="explainThreatBtn" class="explain-btn">Generate AI Threat Explanation</button>
-
     <div id="threat_explanations"></div>
-
 </div>
 
 {% else %}
-<p>No threat results available.</p>
+<div class="box">
+    <h2>⚠️ No Analysis Data</h2>
+    <p>No threat intelligence results available. Please submit the analysis form first.</p>
+</div>
 {% endif %}
 
 <a href="/risk">View Risk Analysis</a>
@@ -193,6 +295,101 @@ if (explainThreatBtn) {
 
     });
 }
+
+// Chart rendering
+document.addEventListener('DOMContentLoaded', function() {
+    if (threatResult.threat) {
+        // Threat Probabilities Chart
+        const threatCtx = document.getElementById('threatChart');
+        if (threatCtx) {
+            new Chart(threatCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ransomware', 'Data Exfiltration'],
+                    datasets: [{
+                        label: 'Threat Probability',
+                        data: [
+                            threatResult.threat.ransomware_probability || 0,
+                            threatResult.threat.exfiltration_probability || 0
+                        ],
+                        backgroundColor: [
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(241, 196, 15, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(241, 196, 15, 1)'
+                        ],
+                        borderWidth: 1,
+                        barThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 152, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 125, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } }
+                    }
+                }
+            });
+        }
+
+        // Threat Signals Chart
+        const signalCtx = document.getElementById('signalChart');
+        if (signalCtx && threatResult.raw) {
+            const raw = threatResult.raw;
+            new Chart(signalCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['File Entropy', 'Encrypted Files', 'Outbound Traffic', 'External IPs', 'DNS Requests'],
+                    datasets: [{
+                        label: 'Threat Signals',
+                        data: [
+                            Math.min(raw.file_entropy_avg / 8.0, 1.0) || 0,
+                            raw.encrypted_extension_ratio || 0,
+                            Math.min(raw.outbound_traffic_mb / 1000.0, 1.0) || 0,
+                            Math.min(raw.unique_external_ips / 50.0, 1.0) || 0,
+                            Math.min(raw.dns_request_count / 200.0, 1.0) || 0
+                        ],
+                        backgroundColor: 'rgba(22, 76, 60, 0.2)',
+                        borderColor: 'rgba(21, 76, 60, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(231, 76, 60, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 20, 152, 0.1)' },
+                            pointLabels: { color: '#00ff88' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#00ff88' } }
+                    }
+                }
+            });
+        }
+    }
+});
 </script>
 
 </body>

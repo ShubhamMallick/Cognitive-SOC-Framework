@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Impact & Propagation Agent</title>
+    <title>Impact & Propagation Agent - Uncertainty-Aware SOC Framework</title>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -97,6 +101,12 @@
             color: #00eaff;
             border-bottom: 1px solid rgba(0,255,255,0.4);
         }
+
+        #impactChart, #propagationChart {
+            width: 320px !important;
+            height: 160px !important;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -106,6 +116,16 @@
 {% if result %}
 
 <div class="box">
+    <div style="margin-bottom: 20px;">
+    <h3>💥 Impact Score</h3>
+    <canvas id="impactChart" width="300" height="150"></canvas>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+    <h3>📈 Propagation Factors</h3>
+    <canvas id="propagationChart" width="300" height="150"></canvas>
+    </div>
+
     <p><strong>Impact Score:</strong> {{ "%.4f"|format(result.impact.impact_score) }}</p>
     <p><strong>Propagation Factor:</strong> {{ "%.4f"|format(result.impact.propagation_factor) }}</p>
 
@@ -195,6 +215,95 @@ if (explainImpactBtn) {
 
     });
 }
+
+// Chart rendering
+document.addEventListener('DOMContentLoaded', function() {
+    if (impactResult.impact) {
+        // Impact Score Chart
+        const impactCtx = document.getElementById('impactChart');
+        if (impactCtx) {
+            const severityColor = impactResult.impact.severity === 'CRITICAL' ? 'rgba(231, 76, 60, 0.8)' :
+                               impactResult.impact.severity === 'HIGH' ? 'rgba(241, 196, 15, 0.8)' :
+                               'rgba(46, 204, 113, 0.8)';
+            
+            new Chart(impactCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Impact Score'],
+                    datasets: [{
+                        label: 'Impact Severity',
+                        data: [impactResult.impact.impact_score || 0],
+                        backgroundColor: [severityColor],
+                        borderColor: [severityColor.replace('0.8', '1')],
+                        borderWidth: 2,
+                        barThickness: 80
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } }
+                    }
+                }
+            });
+        }
+
+        // Propagation Factors Chart
+        const propagationCtx = document.getElementById('propagationChart');
+        if (propagationCtx && impactResult.raw) {
+            const raw = impactResult.raw;
+            new Chart(propagationCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Criticality', 'Outbound Traffic', 'External IPs', 'Process Spawns'],
+                    datasets: [{
+                        label: 'Propagation Factors',
+                        data: [
+                            (raw.criticality_level / 5.0) || 0,
+                            Math.min(raw.outbound_traffic_mb / 1000.0, 1.0) || 0,
+                            Math.min(raw.unique_external_ips / 50.0, 1.0) || 0,
+                            Math.min(raw.process_spawn_count / 100.0, 1.0) || 0
+                        ],
+                        backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                        borderColor: 'rgba(241, 196, 15, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(241, 196, 15, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(241, 196, 15, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                            pointLabels: { color: '#d7e1ff' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } }
+                    }
+                }
+            });
+        }
+    }
+});
 </script>
 
 </body>

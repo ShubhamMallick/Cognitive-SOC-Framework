@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Privacy & Regulatory Agent</title>
+    <title>Privacy & Regulatory Agent - Uncertainty-Aware SOC Framework</title>
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -97,6 +101,12 @@
             color: #00eaff;
             border-bottom: 1px solid rgba(0,255,255,0.4);
         }
+
+        #privacyChart, #exposureChart {
+            width: 320px !important;
+            height: 160px !important;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -106,6 +116,16 @@
 {% if result %}
 
 <div class="box">
+    <div style="margin-bottom: 20px;">
+    <h3>🔐 Privacy Risk Score</h3>
+    <canvas id="privacyChart" width="300" height="150"></canvas>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+    <h3>📡 Privacy Exposure Factors</h3>
+    <canvas id="exposureChart" width="300" height="150"></canvas>
+    </div>
+
     <p><strong>Privacy Risk Score:</strong> {{ "%.4f"|format(result.privacy.privacy_risk_score) }}</p>
     <p><strong>Confidence Adjustment:</strong> {{ "%.4f"|format(result.privacy.confidence_adjusted) }}</p>
 
@@ -203,6 +223,95 @@ if (explainPrivacyBtn) {
 
     });
 }
+
+// Chart rendering
+document.addEventListener('DOMContentLoaded', function() {
+    if (privacyResult.privacy) {
+        // Privacy Risk Score Chart
+        const privacyCtx = document.getElementById('privacyChart');
+        if (privacyCtx) {
+            const breachColor = privacyResult.privacy.breach_level === 'HIGH' ? 'rgba(231, 76, 60, 0.8)' :
+                              privacyResult.privacy.breach_level === 'MEDIUM' ? 'rgba(241, 196, 15, 0.8)' :
+                              'rgba(46, 204, 113, 0.8)';
+            
+            new Chart(privacyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Privacy Risk Score'],
+                    datasets: [{
+                        label: 'Privacy Risk',
+                        data: [privacyResult.privacy.privacy_risk_score || 0],
+                        backgroundColor: [breachColor],
+                        borderColor: [breachColor.replace('0.8', '1')],
+                        borderWidth: 2,
+                        barThickness: 80
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } }
+                    }
+                }
+            });
+        }
+
+        // Privacy Exposure Factors Chart
+        const exposureCtx = document.getElementById('exposureChart');
+        if (exposureCtx && privacyResult.raw) {
+            const raw = privacyResult.raw;
+            new Chart(exposureCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Outbound Traffic', 'External IPs', 'Privilege Escalation', 'Department Sensitivity'],
+                    datasets: [{
+                        label: 'Privacy Exposure Factors',
+                        data: [
+                            Math.min(raw.outbound_traffic_mb / 1000.0, 1.0) || 0,
+                            Math.min(raw.unique_external_ips / 50.0, 1.0) || 0,
+                            raw.privilege_escalation_flag || 0,
+                            (raw.department === "ICU" || raw.department === "ER" || raw.department === "Radiology") ? 1.0 : 0.5
+                        ],
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(52, 152, 219, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: { color: '#d7e1ff' },
+                            grid: { color: 'rgba(0, 255, 255, 0.1)' },
+                            pointLabels: { color: '#d7e1ff' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d7e1ff' } }
+                    }
+                }
+            });
+        }
+    }
+});
 </script>
 
 </body>
