@@ -21,6 +21,18 @@ from Anomaly_Detection import run_detection
 from Anomaly_Detection.Context_Framing import ContextFramingEngine
 
 # =====================================================
+# IMPORT SHAP/LIME EXPLANATIONS (Non-Disruptive)
+# =====================================================
+
+try:
+    from Explanations import initialize_explainer, explain_anomaly
+    EXPLANATIONS_AVAILABLE = True
+    print(" SHAP/LIME explanations module loaded successfully")
+except ImportError as e:
+    EXPLANATIONS_AVAILABLE = False
+    print(f" SHAP/LIME explanations not available: {e}")
+
+# =====================================================
 # IMPORT CONTEXT EXPLANATION ROUTER
 # =====================================================
 
@@ -108,6 +120,39 @@ for col in categorical_cols:
     le.fit(df_ref[col])
     encoders[col] = le
 
+# =====================================================
+# INITIALIZE SHAP/LIME EXPLAINER (Non-Disruptive)
+# =====================================================
+
+explainer = None
+if EXPLANATIONS_AVAILABLE:
+    try:
+        print("🔍 Attempting to initialize SHAP/LIME explainer...")
+        print(f"📁 RF Model path: {os.path.join(BASE_DIR, 'Anomaly_Detection', 'rf_anomaly_model.pkl')}")
+        print(f"📁 ISO Model path: {os.path.join(BASE_DIR, 'Anomaly_Detection', 'iso_anomaly_model.pkl')}")
+        print(f"📁 Training data path: {os.path.join(BASE_DIR, 'Anomaly_Detection', 'uncertainty_aware_soc_dataset_30000_noisy.csv')}")
+
+        # Check if files exist
+        rf_path = os.path.join(BASE_DIR, "Anomaly_Detection", "rf_anomaly_model.pkl")
+        iso_path = os.path.join(BASE_DIR, "Anomaly_Detection", "iso_anomaly_model.pkl")
+        data_path = os.path.join(BASE_DIR, "Anomaly_Detection", "uncertainty_aware_soc_dataset_30000_noisy.csv")
+
+        print(f"✅ RF model exists: {os.path.exists(rf_path)}")
+        print(f"✅ ISO model exists: {os.path.exists(iso_path)}")
+        print(f"✅ Training data exists: {os.path.exists(data_path)}")
+
+        explainer = initialize_explainer(
+            rf_model_path=rf_path,
+            iso_model_path=iso_path,
+            training_data_path=data_path
+        )
+        print("✅ SHAP/LIME explainer initialized successfully")
+    except Exception as e:
+        print(f"❌ SHAP/LIME explainer initialization failed: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        EXPLANATIONS_AVAILABLE = False
+else:
+    print("⚠️ SHAP/LIME explanations module not available")
 
 # =====================================================
 # PYDANTIC INPUT MODEL
@@ -291,13 +336,28 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
     audio_alerts.alert_pipeline_complete(final_decision, confidence)
 
     # -------------------------------------------------
-    # 📊 DASHBOARD UPDATE: After Complete Pipeline
+    # 📊 DASHBOARD UPDATE: Non-Blocking (Doesn't affect pipeline)
     # -------------------------------------------------
 
-    # Feed complete processed data to dashboard backend (with proper error handling)
+    # Feed complete processed data to dashboard backend (completely non-blocking)
+    try:
+        # Schedule dashboard update in background without waiting
+        asyncio.create_task(_update_dashboard_background(
+            raw_features, detection_result, context_result
+        ))
+    except Exception as e:
+        # Dashboard errors never affect the main pipeline
+        print(f"Dashboard scheduling error (non-critical): {e}")
+
+
+# =====================================================
+# BACKGROUND DASHBOARD UPDATE (Non-Blocking)
+# =====================================================
+
+async def _update_dashboard_background(raw_features, detection_result, context_result):
+    """Background task to update dashboard without blocking main pipeline"""
     try:
         from Dashboard.dashboard_backend import dashboard_backend
-        import asyncio
         # Create complete event data for dashboard
         dashboard_event = {
             "timestamp": datetime.now().isoformat(),
@@ -315,13 +375,12 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
             "audit": agent_results.get("audit", {}),
             "outcome": agent_results.get("outcome", {})
         }
-        # Process complete event in dashboard (non-blocking)
-        asyncio.create_task(dashboard_backend.process_soc_event(dashboard_event))
+        # Process complete event in dashboard (background)
+        await dashboard_backend.process_soc_event(dashboard_event)
         print(f"📊 Dashboard updated with complete SOC pipeline results")
     except Exception as e:
-        # Don't let dashboard errors break the main pipeline
-        print(f"Dashboard update error (non-critical): {e}")
-        pass  # Continue without dashboard if it fails
+        print(f"Dashboard background update error (non-critical): {e}")
+
 
 # =====================================================
 # ANALYZE ROUTE
@@ -329,7 +388,6 @@ async def run_agents_parallel(raw_features, detection_result, context_result):
 
 @app.post("/analyze")
 async def analyze_device(data: DeviceData):
-
     try:
         input_dict = data.dict()
         input_df = pd.DataFrame([input_dict])
@@ -353,14 +411,42 @@ async def analyze_device(data: DeviceData):
         agent_results["context"] = context_result
         agent_results["raw"] = input_dict
 
-        return JSONResponse({
+        # Generate SHAP/LIME explanations (non-disruptive)
+        explanations = None
+        if EXPLANATIONS_AVAILABLE and explainer is not None:
+            try:
+                print("🔍 Generating SHAP/LIME explanations...")
+                explanations = explain_anomaly(input_dict)
+                agent_results["explanations"] = explanations
+                print("✅ SHAP/LIME explanations generated successfully")
+                print(f"📊 Explanation keys: {list(explanations.keys()) if explanations else 'None'}")
+            except Exception as e:
+                print(f"❌ SHAP/LIME explanation generation failed: {e}")
+                print(f"❌ Error type: {type(e).__name__}")
+                # Continue without explanations - non-disruptive
+        else:
+            print(f"⚠️ Explanations not available - Available: {EXPLANATIONS_AVAILABLE}, Explainer: {explainer is not None}")
+
+        # Build response (additive only)
+        response_data = {
             "detection": detection_result,
             "context": context_result
-        })
+        }
+        
+        # Add explanations if available (non-disruptive)
+        if explanations is not None:
+            response_data["explanations"] = explanations
+            print(f"📊 Added explanations to response: {type(explanations)}")
+            if isinstance(explanations, dict) and 'explanations' in explanations:
+                print(f"📊 Nested explanations keys: {list(explanations['explanations'].keys())}")
+        else:
+            print(f"⚠️ No explanations to add to response")
+
+        print(f"📊 Final response keys: {list(response_data.keys())}")
+        return JSONResponse(response_data)
 
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
-
 
 # =====================================================
 # HTML ENDPOINTS

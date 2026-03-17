@@ -33,7 +33,7 @@ The **Cognitive SOC Framework** is a cutting-edge, AI-powered Security Operation
 │  • Anomaly Detection         • Confidence Scoring        • Impact       │
 │                                                            • Privacy    │
 │                                                            • Risk       │
-│  🎯 DECISION AUTHORITY      🛡️ EXECUTION LAYER         📊 DASHBOARD     │
+│  🎯 DECISION AUTHORITY      🛡️ EXECUTION LAYER         📊 DASHBOARD   │
 │  ─────────────────────────────────────────────────────────────────    │
 │  • Final Decision Engine     • Containment Actions       • Real-time     │
 │  • Confidence Scoring        • Human Review              • Analytics    │

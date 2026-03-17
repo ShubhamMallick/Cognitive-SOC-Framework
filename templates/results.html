@@ -1062,11 +1062,203 @@ th {
 
 <!-- AI Explanation Section -->
 <div class="ai-explanation-section">
-    <h3>🤖 AI Context Explanation</h3>
-    <button id="explainBtn" class="explain-btn">
-        Generate AI Context Explanation
-    </button>
-    <div id="explanations"></div>
+    <h3>🤖 AI Explanations</h3>
+    
+    <!-- Explanation Type Tabs -->
+    <div class="explanation-tabs">
+        <button class="tab-btn active" onclick="showExplanation('context')">AI Context</button>
+        <button class="tab-btn" onclick="showExplanation('shap')">SHAP Analysis</button>
+        <button class="tab-btn" onclick="showExplanation('lime')">LIME Analysis</button>
+        <button class="tab-btn" onclick="showExplanation('combined')">Combined Insights</button>
+    </div>
+    
+    <!-- AI Context Explanation (Existing) -->
+    <div id="context-explanation" class="explanation-content active">
+        <button id="explainBtn" class="explain-btn">
+            Generate AI Context Explanation
+        </button>
+        <div id="context-explanations"></div>
+    </div>
+    
+    <!-- SHAP Explanation -->
+    <div id="shap-explanation" class="explanation-content">
+        {% if result and result.explanations and result.explanations.explanations and result.explanations.explanations.shap %}
+            {% if result.explanations.explanations.shap.error %}
+                <div class="error-message">
+                    <h5>⚠️ SHAP Explanation Error</h5>
+                    <p>{{ result.explanations.explanations.shap.error }}</p>
+                </div>
+            {% else %}
+                <div class="shap-section">
+                    <h4>🌲 Random Forest Analysis (SHAP)</h4>
+                    <div class="explanation-metrics">
+                        {% if result.explanations.explanations.shap.prediction_probability is defined %}
+                        <div class="metric">
+                            <span class="label">Prediction Probability:</span>
+                            <span class="value">{{ "%.4f"|format(result.explanations.explanations.shap.prediction_probability) }}</span>
+                        </div>
+                        {% endif %}
+                        {% if result.explanations.explanations.shap.expected_value is defined %}
+                        <div class="metric">
+                            <span class="label">Expected Value:</span>
+                            <span class="value">{{ "%.4f"|format(result.explanations.explanations.shap.expected_value) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if result.explanations.explanations.shap.top_features is defined %}
+                    <h5>🎯 Top Feature Importance:</h5>
+                    <div class="feature-list">
+                        {% for feature, importance in result.explanations.explanations.shap.top_features %}
+                        <div class="feature-item">
+                            <span class="feature-name">{{ feature|replace('_', ' ')|title }}</span>
+                            <span class="feature-value {{ 'positive' if importance > 0 else 'negative' }}">
+                                {{ "%+.4f"|format(importance) }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if result.explanations.explanations.shap.summary is defined %}
+                    <div class="explanation-summary">
+                        <h5>📝 SHAP Summary:</h5>
+                        <p>{{ result.explanations.explanations.shap.summary }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="no-explanation">SHAP explanations not available</p>
+        {% endif %}
+    </div>
+    
+    <!-- LIME Explanation -->
+    <div id="lime-explanation" class="explanation-content">
+        {% if result and result.explanations and result.explanations.explanations and result.explanations.explanations.lime %}
+            {% if result.explanations.explanations.lime.error %}
+                <div class="error-message">
+                    <h5>⚠️ LIME Explanation Error</h5>
+                    <p>{{ result.explanations.explanations.lime.error }}</p>
+                </div>
+            {% else %}
+                <div class="lime-section">
+                    <h4>🌲 Random Forest Analysis (LIME)</h4>
+                    <div class="explanation-metrics">
+                        {% if result.explanations.explanations.lime.prediction_probability is defined %}
+                        <div class="metric">
+                            <span class="label">Prediction Probability:</span>
+                            <span class="value">{{ "%.4f"|format(result.explanations.explanations.lime.prediction_probability) }}</span>
+                        </div>
+                        {% endif %}
+                        {% if result.explanations.explanations.lime.prediction is defined %}
+                        <div class="metric">
+                            <span class="label">Prediction:</span>
+                            <span class="value {{ 'anomaly' if result.explanations.explanations.lime.prediction == 'Anomaly' else 'normal' }}">
+                                {{ result.explanations.explanations.lime.prediction }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if result.explanations.explanations.lime.top_features is defined %}
+                    <h5>🎯 Local Feature Contributions:</h5>
+                    <div class="feature-list">
+                        {% for feature, contribution in result.explanations.explanations.lime.top_features %}
+                        <div class="feature-item">
+                            <span class="feature-name">{{ feature|replace('_', ' ')|title }}</span>
+                            <span class="feature-value {{ 'positive' if contribution > 0 else 'negative' }}">
+                                {{ "%+.4f"|format(contribution) }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if result.explanations.explanations.lime.summary is defined %}
+                    <div class="explanation-summary">
+                        <h5>📝 LIME Summary:</h5>
+                        <p>{{ result.explanations.explanations.lime.summary }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="no-explanation">LIME explanations not available</p>
+        {% endif %}
+    </div>
+    
+    <!-- Combined Insights -->
+    <div id="combined-explanation" class="explanation-content">
+        {% if result and result.explanations and result.explanations.explanations and result.explanations.explanations.combined %}
+            {% if result.explanations.explanations.combined.error %}
+                <div class="error-message">
+                    <h5>⚠️ Combined Insights Error</h5>
+                    <p>{{ result.explanations.explanations.combined.error }}</p>
+                </div>
+            {% else %}
+                <div class="combined-section">
+                    <h4>🧠 Combined Model Insights</h4>
+                    
+                    {% if result.explanations.explanations.combined.model_agreement is defined %}
+                    <div class="insight-grid">
+                        <div class="insight-item">
+                            <h5>🤝 Model Agreement:</h5>
+                            <p>{{ result.explanations.explanations.combined.model_agreement }}</p>
+                        </div>
+                        
+                        {% if result.explanations.explanations.combined.common_influential_features is defined %}
+                        <div class="insight-item">
+                            <h5>🎯 Common Influential Features:</h5>
+                            <p>{{ result.explanations.explanations.combined.common_influential_features|join(', ') or 'None identified' }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if result.explanations.explanations.combined.explanation_risk_level is defined %}
+                        <div class="insight-item">
+                            <h5>⚠️ Explanation Risk Level:</h5>
+                            <span class="risk-badge {{ result.explanations.explanations.combined.explanation_risk_level|lower }}">
+                                {{ result.explanations.explanations.combined.explanation_risk_level }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if result.explanations.explanations.combined.confidence_assessment is defined %}
+                        <div class="insight-item">
+                            <h5>🎯 Confidence Assessment:</h5>
+                            <p>{{ result.explanations.explanations.combined.confidence_assessment }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if result.explanations.explanations.combined.actionable_insights is defined %}
+                    <div class="actionable-insights">
+                        <h5>🔧 Actionable Insights:</h5>
+                        <ul>
+                            {% for insight in result.explanations.explanations.combined.actionable_insights %}
+                            <li>{{ insight }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if result.explanations.explanations.combined.recommendations is defined %}
+                    <div class="recommendations">
+                        <h5>📋 Recommendations:</h5>
+                        <ul>
+                            {% for rec in result.explanations.explanations.combined.recommendations %}
+                            <li>{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="no-explanation">Combined insights not available</p>
+        {% endif %}
+    </div>
 </div>
 
 </div>
@@ -1141,7 +1333,7 @@ if (explainBtn){
 
 explainBtn.addEventListener("click", async () => {
 
-const div = document.getElementById("explanations");
+const div = document.getElementById("context-explanations");
 
 div.innerHTML = "<p>Generating AI explanations...</p>";
 
@@ -1485,6 +1677,312 @@ legend: { labels: { color: '#d7e1ff' } }
 
 });
 
+</script>
+
+<!-- SHAP/LIME Explanation Styles -->
+<style>
+.explanation-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    color: #00eaff;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.tab-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    background: rgba(0, 255, 255, 0.3);
+    border-color: #00eaff;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.explanation-content {
+    display: none;
+}
+
+.explanation-content.active {
+    display: block;
+}
+
+.explanation-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.explanation-metrics .metric {
+    background: rgba(0, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.explanation-metrics .label {
+    display: block;
+    font-size: 12px;
+    color: #9fb2ff;
+    margin-bottom: 5px;
+}
+
+.explanation-metrics .value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #00eaff;
+}
+
+.feature-list {
+    background: rgba(0, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    margin-bottom: 20px;
+}
+
+.feature-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.feature-name {
+    font-size: 13px;
+    color: #d7e1ff;
+    flex: 1;
+}
+
+.feature-value {
+    font-weight: 600;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    min-width: 80px;
+    text-align: right;
+}
+
+.feature-value.positive {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.feature-value.negative {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.explanation-summary {
+    background: rgba(0, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    margin-top: 20px;
+}
+
+.explanation-summary h5 {
+    color: #00eaff;
+    margin-bottom: 10px;
+}
+
+.explanation-summary p {
+    color: #d7e1ff;
+    line-height: 1.5;
+}
+
+.insight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.insight-item {
+    background: rgba(0, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.insight-item h5 {
+    color: #00eaff;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.insight-item p {
+    color: #d7e1ff;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.risk-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.risk-badge.critical {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.risk-badge.high {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+.risk-badge.medium {
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.risk-badge.low {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.actionable-insights, .recommendations {
+    background: rgba(0, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    margin-bottom: 20px;
+}
+
+.actionable-insights h5, .recommendations h5 {
+    color: #00eaff;
+    margin-bottom: 12px;
+}
+
+.actionable-insights ul, .recommendations ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.actionable-insights li, .recommendations li {
+    color: #d7e1ff;
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.actionable-insights li:before, .recommendations li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #00eaff;
+    font-weight: 600;
+}
+
+.no-explanation {
+    color: #95a5a6;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feature-value.anomaly {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.feature-value.normal {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.error-message {
+    background: rgba(231, 76, 60, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    margin-bottom: 20px;
+}
+
+.error-message h5 {
+    color: #e74c3c;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.error-message p {
+    color: #c0392b;
+    font-size: 13px;
+    line-height: 1.4;
+}
+</style>
+
+<!-- SHAP/LIME Explanation JavaScript -->
+<script>
+function showExplanation(type) {
+    // Hide all explanation contents
+    const contents = document.querySelectorAll('.explanation-content');
+    contents.forEach(content => content.classList.remove('active'));
+    
+    // Remove active class from all tabs
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Show selected content
+    const selectedContent = document.getElementById(type + '-explanation');
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    }
+    
+    // Activate selected tab
+    const selectedTab = event.target;
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+}
+
+// Initialize with context explanation tab active
+document.addEventListener('DOMContentLoaded', function() {
+    const contextTab = document.querySelector('.tab-btn');
+    if (contextTab) {
+        contextTab.classList.add('active');
+    }
+    const contextContent = document.getElementById('context-explanation');
+    if (contextContent) {
+        contextContent.classList.add('active');
+    }
+});
 </script>
 
 </body>
