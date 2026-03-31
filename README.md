@@ -2,7 +2,7 @@
 
 > **Enterprise-Grade Uncertainty-Aware Security Operations Center (SOC) with 14 AI Agents, Real-Time Dashboard, and LLM-Powered Explanations**
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10.10-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-green.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -174,7 +174,7 @@ SOC/
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.10.10
 - pip package manager
 - OpenAI API key (for LLM features)
 
